@@ -1,0 +1,1 @@
+上传github 代码前必须执行命令  ./gradlew install 如果不执行，jitpack 编译不过
