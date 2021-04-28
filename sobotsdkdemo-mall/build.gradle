@@ -37,8 +37,7 @@ dependencies {
 
     //以下三项必填
     implementation project(':sobotsdk-mall')
-//    implementation 'com.sobot.chat:sobotsdk-mall:2.9.3.0'
-//    api 'com.sobot.chat:sobotsdk-mall:2.7.14'
+//    implementation 'com.github.ZCSDK:sobotsdk-mall:2.9.6'
 
     implementation 'com.squareup.okhttp3:okhttp:4.4.0'
 

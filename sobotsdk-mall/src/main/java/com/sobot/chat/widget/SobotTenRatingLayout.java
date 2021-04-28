@@ -41,6 +41,7 @@ public class SobotTenRatingLayout extends LinearLayout {
      */
     public void init(int defScore, final boolean isCanChange) {
         LayoutParams lp = null;
+        selectContent=defScore;
         for (int i = 0; i < 11; i++) {
             TextView textView = (TextView) LayoutInflater.from(getContext()).inflate(ResourceUtils.getIdByName(getContext(), "layout", "sobot_ten_rating_item"), null);
             textView.setText(i + "");
