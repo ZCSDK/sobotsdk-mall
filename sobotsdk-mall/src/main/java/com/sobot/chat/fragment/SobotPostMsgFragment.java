@@ -362,7 +362,6 @@ public class SobotPostMsgFragment extends SobotBaseFragment implements View.OnCl
         displayInNotch(sobot_tv_post_msg);
         displayInNotch(sobot_post_email_lable);
         displayInNotch(sobot_post_phone_lable);
-        displayInNotch(sobot_post_lable);
         displayInNotch(sobot_post_title_lable);
         displayInNotch(sobot_post_question_type);
         displayInNotch(sobot_post_question_lable);

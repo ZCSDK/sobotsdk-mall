@@ -16,8 +16,8 @@ import com.sobot.chat.adapter.SobotTicketInfoAdapter;
 import com.sobot.chat.api.model.SobotUserTicketInfo;
 import com.sobot.chat.core.http.callback.StringResultCallBack;
 import com.sobot.chat.presenter.StPostMsgPresenter;
+import com.sobot.chat.utils.LogUtils;
 import com.sobot.chat.utils.ResourceUtils;
-import com.sobot.chat.utils.ToastUtil;
 import com.sobot.chat.utils.ZhiChiConstant;
 
 import java.util.ArrayList;
@@ -119,7 +119,7 @@ public class SobotTicketInfoFragment extends SobotBaseFragment {
 
             @Override
             public void onFailure(Exception e, String des) {
-                ToastUtil.showToast(getContext(), des);
+                LogUtils.i(des);
             }
 
         });

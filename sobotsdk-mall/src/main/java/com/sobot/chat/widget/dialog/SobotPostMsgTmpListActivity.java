@@ -47,6 +47,7 @@ public class SobotPostMsgTmpListActivity extends SobotDialogBaseActivity impleme
         sobot_negativeButton.setOnClickListener(this);
         sobot_tv_title = (TextView) findViewById(getResId("sobot_tv_title"));
         sobot_tv_title.setText(ResourceUtils.getResString(getContext(),"sobot_choice_business"));
+        displayInNotch(this,sobot_gv);
     }
 
     @Override

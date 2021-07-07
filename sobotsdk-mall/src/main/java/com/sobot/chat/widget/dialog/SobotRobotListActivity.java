@@ -55,6 +55,7 @@ public class SobotRobotListActivity extends SobotDialogBaseActivity implements A
         sobot_gv = (GridView) findViewById(getResId("sobot_gv"));
         sobot_gv.setOnItemClickListener(this);
         sobot_negativeButton.setOnClickListener(this);
+        displayInNotch(this,sobot_gv);
     }
 
     @Override

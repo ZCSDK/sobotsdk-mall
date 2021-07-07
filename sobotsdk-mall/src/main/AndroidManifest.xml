@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="com.google.android.apps.photos.permission.GOOGLE_PHOTOS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -14,6 +13,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <supports-screens
         android:anyDensity="true"
@@ -23,20 +23,22 @@
         android:smallScreens="true"
         android:xlargeScreens="true" />
 
-    <application
-        android:usesCleartextTraffic="true">
+    <application android:usesCleartextTraffic="true">
         <activity
             android:name=".conversation.SobotChatActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
             android:launchMode="singleTask"
+            android:screenOrientation="behind"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.SobotPhotoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
-            android:hardwareAccelerated="false" />
+            android:hardwareAccelerated="false"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.WebViewActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name="com.sobot.chat.activity.SobotSkillGroupActivity"
@@ -45,15 +47,18 @@
         <activity
             android:name=".activity.SobotPostMsgActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.SobotConsultationListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.SobotPhotoListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
-            android:hardwareAccelerated="false" />
+            android:hardwareAccelerated="false"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.SobotCusFieldActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
@@ -65,6 +70,7 @@
         <activity
             android:name=".activity.SobotQueryFromActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.SobotChooseCityActivity"
@@ -73,31 +79,40 @@
         <activity
             android:name=".activity.SobotChooseFileActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.SobotFileDetailActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.SobotCameraActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.SobotVideoActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.SobotTicketDetailActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.SobotHelpCenterActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.SobotProblemCategoryActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
         <activity
             android:name=".activity.SobotProblemDetailActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
         <activity
             android:name="com.sobot.chat.activity.SobotPostLeaveMsgActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize|touchscreen|navigation|locale|fontScale|uiMode|screenLayout|smallestScreenSize"
+            android:screenOrientation="behind" />
 
         <activity
             android:name=".widget.dialog.SobotRobotListActivity"

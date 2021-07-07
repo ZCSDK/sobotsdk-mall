@@ -36,8 +36,8 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     //以下三项必填
-//    implementation project(':sobotsdk-mall')
-    implementation 'com.sobot.chat:sobotsdk-mall:2.9.7.1'
+    implementation project(':sobotsdk-mall')
+//    implementation 'com.sobot.chat:sobotsdk-mall:2.9.8'
 
     implementation 'com.squareup.okhttp3:okhttp:4.4.0'
 

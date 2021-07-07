@@ -702,7 +702,7 @@ public class SobotTicketDetailAdapter extends SobotBaseAdapter<Object> {
                 public void onResult(INotchScreen.NotchScreenInfo notchScreenInfo) {
                     if (notchScreenInfo.hasNotch) {
                         for (Rect rect : notchScreenInfo.notchRects) {
-                            view.setPadding(rect.right + addPaddingLeft, view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
+                            view.setPadding((rect.right > 110 ? 110 : rect.right) + addPaddingLeft, view.getPaddingTop(), (rect.right > 110 ? 110 : rect.right)+view.getPaddingRight(), view.getPaddingBottom());
                         }
                     }
                 }

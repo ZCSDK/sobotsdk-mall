@@ -270,7 +270,7 @@ public class StCusFieldPresenter {
                         }
                         if (StringUtils.isNumber(field.get(j).getCusFieldConfig().getLimitOptions()) && field.get(j).getCusFieldConfig().getLimitOptions().contains("8")) {
                             if (!ScreenUtils.isMobileNO(singleContent.getText().toString().trim())) {
-                                return field.get(j).getCusFieldConfig().getFieldName() + ResourceUtils.getResString(context, "sobot_input_type_err_phone");
+                                return field.get(j).getCusFieldConfig().getFieldName() + ResourceUtils.getResString(context, "sobot_phone")+ResourceUtils.getResString(context, "sobot_input_type_err");
                             }
                         }
                     } else if (ZhiChiConstant.WORK_ORDER_CUSTOMER_FIELD_MORE_LINE_TYPE == field.get(j).getCusFieldConfig().getFieldType()) {
@@ -303,7 +303,7 @@ public class StCusFieldPresenter {
                 public void onResult(INotchScreen.NotchScreenInfo notchScreenInfo) {
                     if (notchScreenInfo.hasNotch) {
                         for (Rect rect : notchScreenInfo.notchRects) {
-                            view.setPadding(rect.right, view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
+                            view.setPadding((rect.right > 110 ? 110 : rect.right), view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
                         }
                     }
                 }

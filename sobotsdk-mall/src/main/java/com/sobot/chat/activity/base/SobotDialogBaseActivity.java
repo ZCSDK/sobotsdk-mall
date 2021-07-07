@@ -1,14 +1,11 @@
 package com.sobot.chat.activity.base;
 
-import android.Manifest;
 import android.app.Activity;
-import android.content.pm.PackageManager;
+import android.content.pm.ActivityInfo;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,9 +16,7 @@ import com.sobot.chat.MarkConfig;
 import com.sobot.chat.SobotApi;
 import com.sobot.chat.notchlib.INotchScreen;
 import com.sobot.chat.notchlib.NotchScreenManager;
-import com.sobot.chat.utils.CommonUtils;
 import com.sobot.chat.utils.ResourceUtils;
-import com.sobot.chat.utils.ZhiChiConstant;
 
 /**
  * 从界面下方弹出的activity
@@ -33,6 +28,14 @@ public abstract class SobotDialogBaseActivity extends SobotBaseActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+            if (!SobotApi.getSwitchMarkStatus(MarkConfig.LANDSCAPE_SCREEN)) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);//竖屏
+            } else {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);//横屏
+
+            }
+        }
         super.onCreate(savedInstanceState);
 
         //窗口对齐屏幕宽度
@@ -44,47 +47,6 @@ public abstract class SobotDialogBaseActivity extends SobotBaseActivity {
         win.setAttributes(lp);
     }
 
-    /**
-     * 检查相机权限
-     *
-     * @return true, 已经获取权限;false,没有权限,尝试获取
-     */
-    protected boolean checkStorageAndCameraPermission() {
-        if (Build.VERSION.SDK_INT >= 23 && CommonUtils.getTargetSdkVersion(getApplicationContext()) >= 23) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
-                        ZhiChiConstant.SOBOT_PERMISSIONS_REQUEST_CODE);
-                return false;
-            }
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
-                        ZhiChiConstant.SOBOT_PERMISSIONS_REQUEST_CODE);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * 检查存储权限
-     *
-     * @return true, 已经获取权限;false,没有权限,尝试获取
-     */
-    protected boolean checkStoragePermission() {
-        if (Build.VERSION.SDK_INT >= 23 && CommonUtils.getTargetSdkVersion(getApplicationContext()) >= 23) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                //申请WRITE_EXTERNAL_STORAGE权限
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        ZhiChiConstant.SOBOT_PERMISSIONS_REQUEST_CODE);
-                return false;
-            }
-        }
-        return true;
-    }
-
 
     public static void displayInNotch(Activity activity, final View view) {
         if (SobotApi.getSwitchMarkStatus(MarkConfig.LANDSCAPE_SCREEN) && SobotApi.getSwitchMarkStatus(MarkConfig.DISPLAY_INNOTCH) && view != null && activity != null) {
@@ -94,7 +56,7 @@ public abstract class SobotDialogBaseActivity extends SobotBaseActivity {
                 public void onResult(INotchScreen.NotchScreenInfo notchScreenInfo) {
                     if (notchScreenInfo.hasNotch) {
                         for (Rect rect : notchScreenInfo.notchRects) {
-                            view.setPadding(rect.right, view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
+                            view.setPadding((rect.right > 110 ? 110 : rect.right), view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
                         }
                     }
                 }

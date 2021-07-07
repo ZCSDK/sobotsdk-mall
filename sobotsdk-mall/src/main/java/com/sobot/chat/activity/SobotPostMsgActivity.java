@@ -121,6 +121,7 @@ public class SobotPostMsgActivity extends SobotBaseActivity implements View.OnCl
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) mTvCompleted.getLayoutParams();
             lp.topMargin = ScreenUtils.dip2px(SobotPostMsgActivity.this, 40);
         }
+        displayInNotch(mllContainer);
     }
 
     @Override
@@ -172,8 +173,10 @@ public class SobotPostMsgActivity extends SobotBaseActivity implements View.OnCl
             bundle.putBoolean(ZhiChiConstant.FLAG_EXIT_SDK, flag_exit_sdk);
             bundle.putSerializable(StPostMsgPresenter.INTENT_KEY_CONFIG, mConfig);
             bundle.putSerializable(StPostMsgPresenter.INTENT_KEY_CUS_FIELDS, getIntent().getSerializableExtra(StPostMsgPresenter.INTENT_KEY_CUS_FIELDS));
-            mPostMsgFragment = SobotPostMsgFragment.newInstance(bundle);
-            mFragments.add(mPostMsgFragment);
+            if (mConfig != null) {
+                mPostMsgFragment = SobotPostMsgFragment.newInstance(bundle);
+                mFragments.add(mPostMsgFragment);
+            }
         }
 
         if (mIsShowTicket || (mConfig != null && mConfig.isTicketShowFlag())) {

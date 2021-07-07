@@ -11,6 +11,7 @@ import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -29,6 +30,7 @@ import com.sobot.chat.activity.SobotQueryFromActivity;
 import com.sobot.chat.activity.WebViewActivity;
 import com.sobot.chat.adapter.SobotMsgAdapter;
 import com.sobot.chat.api.ResultCallBack;
+import com.sobot.chat.api.apiUtils.SobotVerControl;
 import com.sobot.chat.api.enumtype.CustomerState;
 import com.sobot.chat.api.enumtype.SobotAutoSendMsgMode;
 import com.sobot.chat.api.model.CommonModel;
@@ -165,14 +167,16 @@ public abstract class SobotChatBaseFragment extends SobotBaseFragment implements
                         for (Rect rect : notchScreenInfo.notchRects) {
                             if (view instanceof WebView && view.getParent() instanceof LinearLayout) {
                                 LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) view.getLayoutParams();
-                                layoutParams.leftMargin = rect.right + 14;
+                                layoutParams.rightMargin = (rect.right > 110 ? 110 : rect.right) + 14;
+                                layoutParams.leftMargin = (rect.right > 110 ? 110 : rect.right) + 14;
                                 view.setLayoutParams(layoutParams);
                             } else if (view instanceof WebView && view.getParent() instanceof RelativeLayout) {
                                 RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
-                                layoutParams.leftMargin = rect.right + 14;
+                                layoutParams.rightMargin = (rect.right > 110 ? 110 : rect.right) + 14;
+                                layoutParams.leftMargin = (rect.right > 110 ? 110 : rect.right) + 14;
                                 view.setLayoutParams(layoutParams);
                             } else {
-                                view.setPadding(rect.right + view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
+                                view.setPadding((rect.right > 110 ? 110 : rect.right) + view.getPaddingLeft(), view.getPaddingTop(), (rect.right > 110 ? 110 : rect.right) + view.getPaddingRight(), view.getPaddingBottom());
                             }
                         }
                     }
@@ -188,6 +192,7 @@ public abstract class SobotChatBaseFragment extends SobotBaseFragment implements
         if (initModel != null && customerState == CustomerState.Online && current_client_model == ZhiChiConstant
                 .client_model_customService) {
             restartInputListener();
+            CommonUtils.sendLocalBroadcast(mAppContext, new Intent(Const.SOBOT_CHAT_CHECK_CONNCHANNEL));
         }
         NotificationUtils.cancleAllNotification(mAppContext);
         //重新恢复连接
@@ -542,7 +547,27 @@ public abstract class SobotChatBaseFragment extends SobotBaseFragment implements
     // 人与机械人进行聊天
     protected void sendHttpRobotMessage(final String msgId, String requestText,
                                         String uid, String cid, final Handler handler, int questionFlag, String question, String serverInternationalLanguage) {
-        zhiChiApi.chatSendMsgToRoot(initModel.getRobotid(), requestText, questionFlag, question, uid, cid,
+        Map<String, String> params = new HashMap<>();
+        params.put("adminId", info.getChoose_adminid());//指定客服
+        params.put("tranFlag", info.getTranReceptionistFlag() + "");//是否必转该指定客服
+        params.put("groupId", info.getGroupid());//指定技能组
+        params.put("transferAction", info.getTransferAction());//指定溢出策略
+        if (SobotVerControl.isPlatformVer) {
+            String flowCompanyId = SharedPreferencesUtil.getStringData(getSobotActivity(), ZhiChiConstant.SOBOT_FLOW_COMPANYID, "");
+            if (!TextUtils.isEmpty(flowCompanyId)) {
+                //是否可以溢出
+                String flowType = SharedPreferencesUtil.getStringData(getSobotActivity(), ZhiChiConstant.SOBOT_FLOW_TYPE, "");
+                // 是否溢出到主商户 0-不溢出 , 1-全部溢出，2-忙碌时溢出，3-不在线时溢出,默认不溢出
+                params.put("flowType", flowType);
+                //溢出公司id
+                params.put("flowCompanyId", flowCompanyId);
+                String flowGroupId = SharedPreferencesUtil.getStringData(getSobotActivity(), ZhiChiConstant.SOBOT_FLOW_GROUPID, "");
+                //溢出groupid
+                params.put("flowGroupId", flowGroupId);
+            }
+        }
+
+        zhiChiApi.chatSendMsgToRoot(initModel.getRobotid(), requestText, questionFlag, question, uid, cid, params,
                 new StringResultCallBack<ZhiChiMessageBase>() {
                     @Override
                     public void onSuccess(ZhiChiMessageBase simpleMessage) {
@@ -609,9 +634,14 @@ public abstract class SobotChatBaseFragment extends SobotBaseFragment implements
                 Boolean switchFlag = Boolean.valueOf(commonModelBase.getSwitchFlag()).booleanValue();
                 //如果switchFlag 为true，就会断开通道走，轮训
                 if (switchFlag) {
-                    // 说明用户端有两条或者两条以上消息未接受到，要去切换轮询
-                    CommonUtils.sendLocalBroadcast(mAppContext, new Intent(Const.SOBOT_CHAT_CHECK_SWITCHFLAG));
-                }else {
+                    if (!CommonUtils.isServiceWork(getSobotActivity(), "com.sobot.chat.core.channel.SobotTCPServer")) {
+                        //SobotTCPServer不存在，重启下
+                        SobotMsgManager.getInstance(getSobotActivity()).getZhiChiApi().reconnectChannel();
+                    } else {
+                        // 说明用户端有两条或者两条以上消息未接受到，要去切换轮询
+                        CommonUtils.sendLocalBroadcast(mAppContext, new Intent(Const.SOBOT_CHAT_CHECK_SWITCHFLAG));
+                    }
+                } else {
                     CommonUtils.sendLocalBroadcast(mAppContext, new Intent(Const.SOBOT_CHAT_CHECK_CONNCHANNEL));
                 }
                 if (ZhiChiConstant.client_sendmsg_to_custom_fali.equals(commonModelBase.getStatus())) {
@@ -1140,21 +1170,26 @@ public abstract class SobotChatBaseFragment extends SobotBaseFragment implements
             // 模式的转化
             // 当前传感器距离
             float f_proximiny = event.values[0];
-            // LogUtils.i("监听模式的转换：" + f_proximiny + " 听筒的模式："
+//            LogUtils.i("监听模式的转换：" + f_proximiny + " 听筒的模式：");
             // + mProximiny.getMaximumRange());
             if (!phoneName.contains("mi")) {
-                if (f_proximiny != 0.0) {
+                if (f_proximiny == mProximiny.getMaximumRange()) {
                     audioManager.setSpeakerphoneOn(true);// 打开扬声器
                     audioManager.setMode(AudioManager.MODE_NORMAL);
-                    // LogUtils.i("监听模式的转换：" + "正常模式");
+//                    LogUtils.i("监听模式的转换：" + "正常模式");
                 } else {
                     audioManager.setSpeakerphoneOn(false);// 关闭扬声器
                     if (getSobotActivity() != null) {
                         getSobotActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
                     }
                     // 把声音设定成Earpiece（听筒）出来，设定为正在通话中
-                    audioManager.setMode(AudioManager.MODE_IN_CALL);
-                    // LogUtils.i("监听模式的转换：" + "听筒模式");
+                    //5.0以上
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                    } else {
+                        audioManager.setMode(AudioManager.MODE_IN_CALL);
+                    }
+//                    LogUtils.i("监听模式的转换：" + "听筒模式");
                 }
             }
         } catch (Exception e) {
@@ -1363,6 +1398,12 @@ public abstract class SobotChatBaseFragment extends SobotBaseFragment implements
     }
 
     protected void processAutoSendMsg(final Information info) {
+        if (info.getAutoSendMsgMode() == null) {
+            return;
+        }
+        if (info.getAutoSendMsgMode() == SobotAutoSendMsgMode.Default) {
+            return;
+        }
         SobotAutoSendMsgMode autoSendMsgMode = info.getAutoSendMsgMode();
         if (TextUtils.isEmpty(autoSendMsgMode.getContent())) {
             return;
@@ -1414,7 +1455,7 @@ public abstract class SobotChatBaseFragment extends SobotBaseFragment implements
             }
             if (SobotOption.newHyperlinkListener != null) {
                 //如果返回true,拦截;false 不拦截
-                boolean isIntercept = SobotOption.newHyperlinkListener.onUrlClick(getSobotActivity(),v.getTag() + "");
+                boolean isIntercept = SobotOption.newHyperlinkListener.onUrlClick(getSobotActivity(), v.getTag() + "");
                 if (isIntercept) {
                     return;
                 }
