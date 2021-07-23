@@ -12,7 +12,7 @@ task androidSourcesJar(type: Jar) {
 ext {
     PUBLISH_GROUP_ID = "com.sobot.chat"        //项目包名
     PUBLISH_ARTIFACT_ID = 'sobotsdk-mall'            //项目名
-    PUBLISH_VERSION = '2.9.9'                    //版本号
+    PUBLISH_VERSION = '3.0.0'                    //版本号
 }
 
 
