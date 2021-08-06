@@ -77,7 +77,6 @@ import com.sobot.chat.api.model.ZhiChiInitModeBase;
 import com.sobot.chat.api.model.ZhiChiMessageBase;
 import com.sobot.chat.api.model.ZhiChiPushMessage;
 import com.sobot.chat.api.model.ZhiChiReplyAnswer;
-import com.sobot.chat.camera.util.FileUtil;
 import com.sobot.chat.core.channel.Const;
 import com.sobot.chat.core.channel.SobotMsgManager;
 import com.sobot.chat.core.http.callback.StringResultCallBack;
@@ -95,7 +94,6 @@ import com.sobot.chat.utils.CustomToast;
 import com.sobot.chat.utils.ExtAudioRecorder;
 import com.sobot.chat.utils.ImageUtils;
 import com.sobot.chat.utils.LogUtils;
-import com.sobot.chat.utils.MD5Util;
 import com.sobot.chat.utils.MediaFileUtils;
 import com.sobot.chat.utils.ResourceUtils;
 import com.sobot.chat.utils.ScreenUtils;
@@ -1467,11 +1465,8 @@ public class SobotChatFSFragment extends SobotChatBaseFragment implements View.O
                 if (!isActive()) {
                     return;
                 }
-                if (e instanceof IllegalArgumentException) {
-                    if (LogUtils.isDebug) {
-                        ToastUtil.showToast(mAppContext, ResourceUtils.getResString(getContext(), "sobot_net_work_err"));
-                    }
-                    //LogUtils.e("SobotChatFragment->customerInit Ille= "+e.toString() +des);
+                if (e instanceof IllegalArgumentException && !TextUtils.isEmpty(des)) {
+                    ToastUtil.showToast(mAppContext, des);
                     finish();
                 } else {
                     showInitError();
@@ -2884,8 +2879,12 @@ public class SobotChatFSFragment extends SobotChatBaseFragment implements View.O
                 }
                 sobot_txt_restart_talk.setVisibility(View.VISIBLE);
                 btn_model_edit.setVisibility(View.GONE);
-                sobot_tv_message.setVisibility(initModel.getMsgFlag() == ZhiChiConstant.sobot_msg_flag_close ? View
-                        .GONE : View.VISIBLE);
+                if (info.isHideMenuLeave()) {
+                    sobot_tv_message.setVisibility(View.GONE);
+                } else {
+                    sobot_tv_message.setVisibility(initModel.getMsgFlag() == ZhiChiConstant.sobot_msg_flag_close ? View
+                            .GONE : View.VISIBLE);
+                }
                 btn_model_voice.setVisibility(View.GONE);
                 lv_message.setSelection(messageAdapter.getCount());
                 break;
