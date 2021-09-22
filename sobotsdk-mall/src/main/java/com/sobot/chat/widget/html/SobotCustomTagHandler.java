@@ -16,7 +16,6 @@ import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TextAppearanceSpan;
 import android.text.style.UnderlineSpan;
-import android.util.Log;
 
 import com.sobot.chat.utils.ScreenUtils;
 import com.sobot.chat.utils.StringUtils;
