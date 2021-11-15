@@ -137,6 +137,7 @@ public class ChatUtils {
             intent.setType("video/*");
         } else {
             intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+            intent.setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*");
         }
         try {
             if (childFragment != null) {
@@ -400,7 +401,7 @@ public class ChatUtils {
         } else if (3 == type) { // 被加入黑名单
             return ResourceUtils.getResString(context, "sobot_outline_leverByManager");
         } else if (4 == type) { // 超时下线
-            String userOutWord = SharedPreferencesUtil.getStringData(context, ZhiChiConstant.SOBOT_USER_OUT_WORD, "");
+            String userOutWord = ZCSobotApi.getCurrentInfoSetting(context) != null ? ZCSobotApi.getCurrentInfoSetting(context).getUser_out_word() : "";
             if (!TextUtils.isEmpty(userOutWord)) {
                 return userOutWord;
             } else {

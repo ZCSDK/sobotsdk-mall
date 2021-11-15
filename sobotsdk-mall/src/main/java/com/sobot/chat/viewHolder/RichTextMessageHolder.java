@@ -493,6 +493,7 @@ public class RichTextMessageHolder extends MessageHolderBase implements View.OnC
                     // 0：文本，1：图片，2：音频，3：视频，4：文件
                     if (richListModel.getType() == 0) {
                         TextView textView = new TextView(mContext);
+                        textView.setTextSize(14);
                         textView.setLayoutParams(wlayoutParams);
                         textView.setMaxWidth(msgMaxWidth);
                         if (!TextUtils.isEmpty(richListModel.getName()) && HtmlTools.isHasPatterns(richListModel.getMsg())) {

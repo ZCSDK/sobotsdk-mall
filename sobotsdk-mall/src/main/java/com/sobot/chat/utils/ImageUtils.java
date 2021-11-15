@@ -131,7 +131,7 @@ public class ImageUtils {
         }
 
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-        if (!(Build.VERSION.SDK_INT<Build.VERSION_CODES.Q||Environment.isExternalStorageLegacy())){
+        if (!(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Environment.isExternalStorageLegacy())) {
             return uriToFileApiQ(context, uri);
         }
         // DocumentProvider
@@ -508,7 +508,7 @@ public class ImageUtils {
                     is = contentResolver.openInputStream(uri);
                     File cache = new File(context.getExternalCacheDir().getAbsolutePath(), Math.round((Math.random() + 1) * 1000) + displayName);
                     fos = new FileOutputStream(cache);
-                    IOUtils.copyFileWithStream(fos,is);
+                    IOUtils.copyFileWithStream(fos, is);
                     file = cache;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -530,6 +530,10 @@ public class ImageUtils {
                 }
             }
         }
-        return file.getAbsolutePath();
+        if (file == null) {
+            return null;
+        } else {
+            return file.getAbsolutePath();
+        }
     }
 }

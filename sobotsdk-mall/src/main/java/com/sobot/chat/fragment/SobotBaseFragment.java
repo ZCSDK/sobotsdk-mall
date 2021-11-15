@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -36,6 +37,7 @@ import com.sobot.chat.notchlib.INotchScreen;
 import com.sobot.chat.notchlib.NotchScreenManager;
 import com.sobot.chat.utils.ChatUtils;
 import com.sobot.chat.utils.CommonUtils;
+import com.sobot.chat.utils.LogUtils;
 import com.sobot.chat.utils.ResourceUtils;
 import com.sobot.chat.utils.ScreenUtils;
 import com.sobot.chat.utils.ToastUtil;
@@ -103,7 +105,7 @@ public abstract class SobotBaseFragment extends Fragment {
                                 layoutParams.leftMargin = (rect.right > 110 ? 110 : rect.right) + 14;
                                 view.setLayoutParams(layoutParams);
                             } else {
-                                view.setPadding((rect.right > 110 ? 110 : rect.right) + view.getPaddingLeft(), view.getPaddingTop(), (rect.right > 110 ? 110 : rect.right)+view.getPaddingRight(), view.getPaddingBottom());
+                                view.setPadding((rect.right > 110 ? 110 : rect.right) + view.getPaddingLeft(), view.getPaddingTop(), (rect.right > 110 ? 110 : rect.right) + view.getPaddingRight(), view.getPaddingBottom());
                             }
                         }
                     }
@@ -286,7 +288,11 @@ public abstract class SobotBaseFragment extends Fragment {
      * @return true, 已经获取权限;false,没有权限,尝试获取
      */
     protected boolean checkStoragePermission() {
-        if (Build.VERSION.SDK_INT >= 30 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 30) {
+        if (Build.VERSION.SDK_INT >= 29 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 29 && (Build.VERSION.SDK_INT >= 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 30 || (!Environment.isExternalStorageLegacy()))) {
+            //分区存储 从andrid10手机开始 TargetSdkVersion >= 29,以下几种情况不需要文件存储权限
+            //android 11 强制开启了 分区存储
+            //targetSdkVersion >=30 以上分区存储强制执行
+            //targetSdkVersion =29 android10手机 android:requestLegacyExternalStorage="false"（是否使用分区存储 true 停用 false 使用，默认false）
             return true;
         }
         if (Build.VERSION.SDK_INT >= 23 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 23) {
@@ -314,7 +320,11 @@ public abstract class SobotBaseFragment extends Fragment {
      * @return true, 已经获取权限;false,没有权限
      */
     protected boolean isHasStoragePermission() {
-        if (Build.VERSION.SDK_INT >= 30 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 30) {
+        if (Build.VERSION.SDK_INT >= 29 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 29 && (Build.VERSION.SDK_INT >= 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 30 || (!Environment.isExternalStorageLegacy()))) {
+            //分区存储 从andrid10手机开始 TargetSdkVersion >= 29,以下几种情况不需要文件存储权限
+            //android 11 强制开启了 分区存储
+            //targetSdkVersion >=30 以上分区存储强制执行
+            //targetSdkVersion =29 android10手机 android:requestLegacyExternalStorage="false"（是否使用分区存储 true 停用 false 使用，默认false）
             return true;
         }
         if (Build.VERSION.SDK_INT >= 23 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 23) {
@@ -334,7 +344,12 @@ public abstract class SobotBaseFragment extends Fragment {
      */
     protected boolean checkStorageAndAudioPermission() {
         if (Build.VERSION.SDK_INT >= 23 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 23) {
-            if (Build.VERSION.SDK_INT < 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) < 30) {
+            if (Build.VERSION.SDK_INT >= 29 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 29 && (Build.VERSION.SDK_INT >= 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 30 || (!Environment.isExternalStorageLegacy()))) {
+                //分区存储 从andrid10手机开始 TargetSdkVersion >= 29,以下几种情况不需要文件存储权限
+                //android 11 强制开启了 分区存储
+                //targetSdkVersion >=30 以上分区存储强制执行
+                //targetSdkVersion =29 android10手机 android:requestLegacyExternalStorage="false"（是否使用分区存储 true 停用 false 使用，默认false）
+            } else {
                 if (ContextCompat.checkSelfPermission(getSobotActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
                     this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
@@ -374,7 +389,12 @@ public abstract class SobotBaseFragment extends Fragment {
      */
     protected boolean checkStorageAudioAndCameraPermission() {
         if (Build.VERSION.SDK_INT >= 23 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 23) {
-            if (Build.VERSION.SDK_INT < 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) < 30) {
+            if (Build.VERSION.SDK_INT >= 29 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 29 && (Build.VERSION.SDK_INT >= 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 30 || (!Environment.isExternalStorageLegacy()))) {
+                //分区存储 从andrid10手机开始 TargetSdkVersion >= 29,以下几种情况不需要文件存储权限
+                //android 11 强制开启了 分区存储
+                //targetSdkVersion >=30 以上分区存储强制执行
+                //targetSdkVersion =29 android10手机 android:requestLegacyExternalStorage="false"（是否使用分区存储 true 停用 false 使用，默认false）
+            } else {
                 if (ContextCompat.checkSelfPermission(getSobotActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
                     this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -422,7 +442,12 @@ public abstract class SobotBaseFragment extends Fragment {
      */
     protected boolean checkStorageAndCameraPermission() {
         if (Build.VERSION.SDK_INT >= 23 && CommonUtils.getTargetSdkVersion(getContext()) >= 23) {
-            if (Build.VERSION.SDK_INT < 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) < 30) {
+            if (Build.VERSION.SDK_INT >= 29 && CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 29 && (Build.VERSION.SDK_INT >= 30 || CommonUtils.getTargetSdkVersion(getSobotActivity().getApplicationContext()) >= 30 || (!Environment.isExternalStorageLegacy()))) {
+                //分区存储 从andrid10手机开始 TargetSdkVersion >= 29,以下几种情况不需要文件存储权限
+                //android 11 强制开启了 分区存储
+                //targetSdkVersion >=30 以上分区存储强制执行
+                //targetSdkVersion =29 android10手机 android:requestLegacyExternalStorage="false"（是否使用分区存储 true 停用 false 使用，默认false）
+            } else {
                 if (ContextCompat.checkSelfPermission(getSobotActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
                     this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA},
