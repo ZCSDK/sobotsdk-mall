@@ -2602,6 +2602,27 @@ public class SobotChatFSFragment extends SobotChatBaseFragment implements View.O
         mAudioPlayPresenter.clickAudio(message, mAudioPlayCallBack);
     }
 
+    @Override
+    public void sendMessage(String content) {
+        sendMsg(content);
+    }
+
+    @Override
+    public void removeMessageByMsgId(String msgid) {
+        if (messageAdapter != null && !TextUtils.isEmpty(msgid)) {
+            messageAdapter.removeByMsgId(msgid);
+            messageAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void addMessage(ZhiChiMessageBase message) {
+        if (message!=null){
+            messageAdapter.justAddData(message);
+            messageAdapter.notifyDataSetChanged();
+        }
+    }
+
     public void showVoiceAnim(final ZhiChiMessageBase info, final boolean isShow) {
         if (!isActive()) {
             return;
