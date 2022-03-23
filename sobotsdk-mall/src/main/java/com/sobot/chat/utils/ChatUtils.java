@@ -45,12 +45,12 @@ import com.sobot.chat.application.MyApplication;
 import com.sobot.chat.camera.util.FileUtil;
 import com.sobot.chat.core.channel.Const;
 import com.sobot.chat.core.channel.SobotMsgManager;
-import com.sobot.chat.core.http.callback.StringResultCallBack;
 import com.sobot.chat.viewHolder.ImageMessageHolder;
 import com.sobot.chat.widget.dialog.SobotDialogUtils;
 import com.sobot.chat.widget.dialog.SobotEvaluateDialog;
 import com.sobot.chat.widget.dialog.SobotRobotListDialog;
 import com.sobot.chat.widget.dialog.SobotTicketEvaluateDialog;
+import com.sobot.network.http.callback.StringResultCallBack;
 import com.sobot.pictureframe.SobotBitmapUtil;
 
 import java.io.File;
@@ -116,6 +116,31 @@ public class ChatUtils {
                 act.startActivityForResult(intent, ZhiChiConstant.REQUEST_CODE_picture);
             }
         } catch (Exception e) {
+            ToastUtil.showToast(act.getApplicationContext(), ResourceUtils.getResString(act, "sobot_not_open_album"));
+        }
+    }
+
+    /**
+     * 打开选择视频界面
+     *
+     * @param act
+     */
+    public static void openSelectVedio(Activity act) {
+        if (act == null) {
+            return;
+        }
+        Intent intent;
+        if (Build.VERSION.SDK_INT < 19) {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("video/*");
+        } else {
+            intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+            intent.setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*");
+        }
+        try {
+                act.startActivityForResult(intent, ZhiChiConstant.REQUEST_CODE_picture);
+        } catch (Exception e) {
+            e.printStackTrace();
             ToastUtil.showToast(act.getApplicationContext(), ResourceUtils.getResString(act, "sobot_not_open_album"));
         }
     }
