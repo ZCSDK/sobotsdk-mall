@@ -1,6 +1,7 @@
 package com.sobot.chat.utils;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -25,16 +26,13 @@ public final class StringUtils {
     public static boolean isURL(String str) {
         //转换为小写
         str = str.toLowerCase();
-        String regex = "^((https|http|ftp|rtsp|mms)?://)" //https、http、ftp、rtsp、mms
-                + "?(([0-9a-z_!~*'().&=+$%-]+: )?[0-9a-z_!~*'().&=+$%-]+@)?" //ftp的user@
-                + "(([0-9]{1,3}\\.){3}[0-9]{1,3}" // IP形式的URL- 例如：199.194.52.184
-                + "|" // 允许IP和DOMAIN（域名）
-                + "([0-9a-z_!~*'()-]+\\.)*" // 域名- www.
-                + "([0-9a-z][0-9a-z-]{0,61})?[0-9a-z]\\." // 二级域名
-                + "[a-z]{2,6})" // first level domain- .com or .museum
-                + "(:[0-9]{1,5})?" // 端口号最大为65535,5位数
-                + "((/?)|" // a slash isn't required if there is no file name
-                + "(/[0-9a-z_!~*'().;?:@&=+$,%#-]+)+/?)$";
+        String regex = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]";
+        try {
+            regex = HtmlTools.getWebUrl().pattern();
+        } catch (Exception e) {
+            regex = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]";
+            e.printStackTrace();
+        }
         return str.matches(regex);
     }
 
@@ -368,6 +366,44 @@ public final class StringUtils {
             return true;
         else
             return false;
+    }
+
+    //判断系统语言是否是英文 true 是 false 不是
+    public static boolean isEn(Context context) {
+        Locale locale = context.getResources().getConfiguration().locale;
+        String language = locale.getLanguage();
+        if (language.endsWith("en"))
+            return true;
+        else
+            return false;
+    }
+
+
+    //检查字符串是否为空
+    public static boolean isEmpty(String str) {
+        if (TextUtils.isEmpty(str) || "null".equals(str) || "NULL".equals(str)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //检查字符串是否不为空
+    public static boolean isNoEmpty(String str) {
+        if (TextUtils.isEmpty(str) || "null".equals(str) || "NULL".equals(str)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    //检查字符串为空的情况，如果是空，返回 “”
+    public static String checkStringIsNull(String str) {
+        if (TextUtils.isEmpty(str) || "null".equals(str) || "NULL".equals(str)) {
+            return "";
+        } else {
+            return str;
+        }
     }
 
 }

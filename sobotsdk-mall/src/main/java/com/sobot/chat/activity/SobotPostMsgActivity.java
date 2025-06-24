@@ -5,8 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.ViewPager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.viewpager.widget.ViewPager;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
@@ -94,7 +94,8 @@ public class SobotPostMsgActivity extends SobotBaseActivity implements View.OnCl
 //        showLeftMenu(getResDrawableId("sobot_icon_back_grey"), "", true);
 //        setTitle(getResString("sobot_str_bottom_message"));
         mLlCompleted = (LinearLayout) findViewById(getResId("sobot_ll_completed"));
-        mllContainer = (LinearLayout) findViewById(getResId("sobot_ll_container"));
+        mllContainer = (LinearLayout) findViewById(getResId("sobot_postmsg_ll_container"));
+        setViewDefBgForStatusBar(mllContainer);
         mTvTicket = (TextView) findViewById(getResId("sobot_tv_ticket"));
         mTvTicket.setText(ResourceUtils.getResString(SobotPostMsgActivity.this, "sobot_leaveMsg_to_ticket"));
         mTvCompleted = (TextView) findViewById(getResId("sobot_tv_completed"));
@@ -172,7 +173,6 @@ public class SobotPostMsgActivity extends SobotBaseActivity implements View.OnCl
             bundle.putInt(ZhiChiConstant.FLAG_EXIT_TYPE, flag_exit_type);
             bundle.putBoolean(ZhiChiConstant.FLAG_EXIT_SDK, flag_exit_sdk);
             bundle.putSerializable(StPostMsgPresenter.INTENT_KEY_CONFIG, mConfig);
-            bundle.putSerializable(StPostMsgPresenter.INTENT_KEY_CUS_FIELDS, getIntent().getSerializableExtra(StPostMsgPresenter.INTENT_KEY_CUS_FIELDS));
             if (mConfig != null) {
                 mPostMsgFragment = SobotPostMsgFragment.newInstance(bundle);
                 mFragments.add(mPostMsgFragment);

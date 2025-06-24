@@ -68,6 +68,7 @@ public class SobotHelpCenterActivity extends SobotBaseHelpCenterActivity impleme
             tv_sobot_layout_online_tel.setVisibility(View.GONE);
         }
         displayInNotch(mGridView);
+        displayInNotch(mBottomBtn);
     }
 
     @Override
@@ -79,8 +80,8 @@ public class SobotHelpCenterActivity extends SobotBaseHelpCenterActivity impleme
                 if (datas != null && datas.size() > 0) {
                     mEmptyView.setVisibility(View.GONE);
                     mGridView.setVisibility(View.VISIBLE);
-                    if (mAdapter == null) {
-                        mAdapter = new SobotHelpCenterAdapter(getApplicationContext(), datas);
+                    if (mAdapter == null && getSobotBaseActivity()!=null) {
+                        mAdapter = new SobotHelpCenterAdapter(getSobotBaseActivity(), datas);
                         mGridView.setAdapter(mAdapter);
                     } else {
                         List<StCategoryModel> list = mAdapter.getDatas();
@@ -104,12 +105,24 @@ public class SobotHelpCenterActivity extends SobotBaseHelpCenterActivity impleme
     @Override
     public void onClick(View v) {
         if (v == tv_sobot_layout_online_service) {
+            if (SobotOption.openChatListener != null) {
+                boolean isIntercept = SobotOption.openChatListener.onOpenChatClick(getSobotBaseActivity(), mInfo);
+                if (isIntercept) {
+                    return;
+                }
+            }
             SobotApi.startSobotChat(getApplicationContext(), mInfo);
         }
         if (v == tv_sobot_layout_online_tel) {
             if (!TextUtils.isEmpty(mInfo.getHelpCenterTel())) {
                 if (SobotOption.functionClickListener != null) {
                      SobotOption.functionClickListener.onClickFunction(getSobotBaseActivity(), SobotFunctionType.ZC_PhoneCustomerService);
+                }
+                if (SobotOption.newHyperlinkListener != null) {
+                    boolean isIntercept = SobotOption.newHyperlinkListener.onPhoneClick(getSobotBaseActivity(), "tel:" + mInfo.getHelpCenterTel());
+                    if (isIntercept) {
+                        return;
+                    }
                 }
                 ChatUtils.callUp(mInfo.getHelpCenterTel(), getSobotBaseActivity());
             }

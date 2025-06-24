@@ -1,5 +1,7 @@
 package com.sobot.chat.adapter;
 
+import static com.sobot.chat.utils.DateUtil.DATE_TIME_FORMAT;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
@@ -13,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.sobot.chat.MarkConfig;
+import com.sobot.chat.R;
 import com.sobot.chat.SobotApi;
 import com.sobot.chat.ZCSobotApi;
 import com.sobot.chat.adapter.base.SobotBaseAdapter;
@@ -23,8 +26,6 @@ import com.sobot.chat.utils.DateUtil;
 import com.sobot.chat.utils.ResourceUtils;
 
 import java.util.List;
-
-import static com.sobot.chat.utils.DateUtil.DATE_TIME_FORMAT;
 
 /**
  * 留言记录适配器
@@ -45,7 +46,7 @@ public class SobotTicketInfoAdapter extends SobotBaseAdapter<SobotUserTicketInfo
     public static final int MSG_TYPE_FILE = 0;
 
     public SobotTicketInfoAdapter(Activity activity, Context context, List list) {
-        super(context, list);
+        super(activity, list);
         this.mContext = context;
         this.activity = activity;
     }
@@ -142,6 +143,14 @@ public class SobotTicketInfoAdapter extends SobotBaseAdapter<SobotUserTicketInfo
         }
 
         void bindData(SobotUserTicketInfo data) {
+            if (data != null && !TextUtils.isEmpty(data.getContent())) {
+                String tempStr = data.getContent().replaceAll("<br/>", "").replace("<p></p>", "")
+                        .replaceAll("<p>", "").replaceAll("</p>", "").replaceAll("\n", "");
+                if(tempStr.contains("<img")) {
+                    tempStr = tempStr.replaceAll("<img[^>]*>", " [" + activity.getResources().getString(R.string.sobot_upload) + "] ");
+                }
+                tv_content.setText(TextUtils.isEmpty(data.getContent()) ? "" : Html.fromHtml(tempStr));
+            }
             tv_content.setText(TextUtils.isEmpty(data.getContent()) ? "" : Html.fromHtml(data.getContent()));
             if (2 == data.getFlag()) {
                 tv_ticket_status.setText(str2_resId);

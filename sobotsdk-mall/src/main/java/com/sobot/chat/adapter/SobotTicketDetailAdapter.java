@@ -1,13 +1,15 @@
 package com.sobot.chat.adapter;
 
+import static com.sobot.chat.utils.DateUtil.DATE_TIME_FORMAT;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.Html;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -20,6 +22,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.sobot.chat.MarkConfig;
+import com.sobot.chat.R;
 import com.sobot.chat.SobotApi;
 import com.sobot.chat.SobotUIConfig;
 import com.sobot.chat.ZCSobotApi;
@@ -40,6 +43,7 @@ import com.sobot.chat.utils.DateUtil;
 import com.sobot.chat.utils.HtmlTools;
 import com.sobot.chat.utils.ResourceUtils;
 import com.sobot.chat.utils.ScreenUtils;
+import com.sobot.chat.utils.SobotOption;
 import com.sobot.chat.utils.StringUtils;
 import com.sobot.chat.utils.ZhiChiConstant;
 import com.sobot.chat.widget.StExpandableTextView;
@@ -49,8 +53,6 @@ import com.sobot.chat.widget.attachment.FileTypeConfig;
 import com.sobot.chat.widget.attachment.SpaceItemDecoration;
 
 import java.util.List;
-
-import static com.sobot.chat.utils.DateUtil.DATE_TIME_FORMAT;
 
 /**
  * 留言记录适配器
@@ -113,6 +115,13 @@ public class SobotTicketDetailAdapter extends SobotBaseAdapter<Object> {
 
         @Override
         public void previewPic(String fileUrl, String fileName, int position) {
+            if (SobotOption.imagePreviewListener != null) {
+                //如果返回true,拦截;false 不拦截
+                boolean isIntercept = SobotOption.imagePreviewListener.onPreviewImage(mContext,fileUrl);
+                if (isIntercept) {
+                    return;
+                }
+            }
             Intent intent = new Intent(context, SobotPhotoActivity.class);
             intent.putExtra("imageUrL", fileUrl);
             context.startActivity(intent);
@@ -126,7 +135,7 @@ public class SobotTicketDetailAdapter extends SobotBaseAdapter<Object> {
     }
 
     public SobotTicketDetailAdapter(Activity activity, Context context, List list, int attachmentCount) {
-        super(context, list);
+        super(activity, list);
         this.mContext = context;
         this.mActivity = activity;
         this.attachmentCount = attachmentCount;
@@ -285,6 +294,9 @@ public class SobotTicketDetailAdapter extends SobotBaseAdapter<Object> {
             if (data != null && !TextUtils.isEmpty(data.getContent())) {
                 String tempStr = data.getContent().replaceAll("<br/>", "").replace("<p></p>", "")
                         .replaceAll("<p>", "").replaceAll("</p>", "<br/>").replaceAll("\n", "<br/>");
+                if(tempStr.contains("<img")) {
+                    tempStr = tempStr.replaceAll("<img[^>]*>", " [" + mActivity.getResources().getString(R.string.sobot_upload) + "] ");
+                }
                 tv_exp.setText(TextUtils.isEmpty(data.getContent()) ? "" : Html.fromHtml(tempStr));
             }
             int color = ResourceUtils.getResColorValue(context, "sobot_common_text_gray");
@@ -623,20 +635,27 @@ public class SobotTicketDetailAdapter extends SobotBaseAdapter<Object> {
         private TextView sobot_tv_my_evaluate_remark;
 
         private LinearLayout sobot_my_evaluate_ll;
+        private LinearLayout sobot_ll_lab;
+        private LinearLayout sobot_ll_isSolve;
+        private TextView sobot_tv_isSolve,sobot_tv_lab;
 
         Type4ViewHolder(Context context, View view) {
             super(context, view);
-            sobot_ll_score = (LinearLayout) view.findViewById(ResourceUtils.getResId(context, "sobot_ll_score"));
-            sobot_tv_remark = (TextView) view.findViewById(ResourceUtils.getResId(context, "sobot_tv_remark"));
-            sobot_ll_remark = (LinearLayout) view.findViewById(ResourceUtils.getResId(context, "sobot_ll_remark"));
-            sobot_ratingBar = (RatingBar) view.findViewById(ResourceUtils.getResId(context, "sobot_ratingBar"));
-            sobot_my_evaluate_tv = (TextView) view.findViewById(ResourceUtils.getResId(context, "sobot_my_evaluate_tv"));
-            sobot_my_evaluate_tv.setText(ResourceUtils.getResString(context, "sobot_my_service_comment"));
-            sobot_tv_my_evaluate_score = (TextView) view.findViewById(ResourceUtils.getResId(context, "sobot_tv_my_evaluate_score"));
-            sobot_tv_my_evaluate_score.setText(ResourceUtils.getResString(context, "sobot_rating_score")+"：");
-            sobot_tv_my_evaluate_remark = (TextView) view.findViewById(ResourceUtils.getResId(context, "sobot_tv_my_evaluate_remark"));
-            sobot_tv_my_evaluate_remark.setText(ResourceUtils.getResString(context, "sobot_rating_dec")+"：");
-            sobot_my_evaluate_ll = (LinearLayout) view.findViewById(ResourceUtils.getResId(context, "sobot_my_evaluate_ll"));
+            sobot_ll_score = (LinearLayout) view.findViewById(R.id.sobot_ll_score);
+            sobot_ll_lab = (LinearLayout) view.findViewById(R.id.sobot_ll_lab);
+            sobot_ll_isSolve = (LinearLayout) view.findViewById(R.id.sobot_ll_isSolve);
+            sobot_tv_isSolve = (TextView) view.findViewById(R.id.sobot_tv_isSolve);
+            sobot_tv_lab = (TextView) view.findViewById(R.id.sobot_tv_lab);
+            sobot_tv_remark = (TextView) view.findViewById(R.id.sobot_tv_remark);
+            sobot_ll_remark = (LinearLayout) view.findViewById(R.id.sobot_ll_remark);
+            sobot_ratingBar = (RatingBar) view.findViewById(R.id.sobot_ratingBar);
+            sobot_my_evaluate_tv = (TextView) view.findViewById(R.id.sobot_my_evaluate_tv);
+            sobot_my_evaluate_tv.setText(R.string.sobot_my_service_comment);
+            sobot_tv_my_evaluate_score = (TextView) view.findViewById(R.id.sobot_tv_my_evaluate_score);
+            sobot_tv_my_evaluate_score.setText(context.getResources().getString(R.string.sobot_rating_score)+"：");
+            sobot_tv_my_evaluate_remark = (TextView) view.findViewById(R.id.sobot_tv_my_evaluate_remark);
+            sobot_tv_my_evaluate_remark.setText(context.getResources().getString(R.string.sobot_rating_dec)+"：");
+            sobot_my_evaluate_ll = (LinearLayout) view.findViewById(R.id.sobot_my_evaluate_ll);
         }
 
         void bindData(Object item, int position) {
@@ -646,21 +665,63 @@ public class SobotTicketDetailAdapter extends SobotBaseAdapter<Object> {
                 if (mEvaluate.isEvalution()) {
                     sobot_ratingBar.setIsIndicator(true);
                     //已评价
+                    sobot_ll_score.setVisibility(View.VISIBLE);
+                    sobot_ll_remark.setVisibility(View.VISIBLE);
                     sobot_my_evaluate_tv.setVisibility(View.VISIBLE);
                     sobot_my_evaluate_ll.setVisibility(View.VISIBLE);
-                    List<SobotUserTicketEvaluate.TicketScoreInfooListBean> infooList = mEvaluate.getTicketScoreInfooList();
-                    if (infooList != null && infooList.size() >= mEvaluate.getScore()) {
-                        sobot_ll_score.setVisibility(View.VISIBLE);
+                    if ( mEvaluate.getScore()>0) {
                         sobot_ratingBar.setRating(mEvaluate.getScore());
                     } else {
-                        sobot_ll_score.setVisibility(View.GONE);
+                        sobot_ratingBar.setRating(0);
                     }
-
-                    if (TextUtils.isEmpty(mEvaluate.getRemark())) {
-                        sobot_ll_remark.setVisibility(View.GONE);
-                    } else {
+                    if(mEvaluate.getTxtFlag()==1) {
                         sobot_ll_remark.setVisibility(View.VISIBLE);
-                        sobot_tv_remark.setText(mEvaluate.getRemark());
+                        if (TextUtils.isEmpty(mEvaluate.getRemark())) {
+                            sobot_tv_remark.setText("--");
+                        } else {
+                            sobot_tv_remark.setText(mEvaluate.getRemark());
+                        }
+                    }else{
+                        sobot_ll_remark.setVisibility(View.GONE);
+                    }
+                    if(mEvaluate.getIsTagFlag()==1) {
+                        sobot_ll_lab.setVisibility(View.VISIBLE);
+                        if (TextUtils.isEmpty(mEvaluate.getTag())) {
+                            sobot_tv_lab.setText("--");
+                        } else {
+                            sobot_tv_lab.setText(mEvaluate.getTag().replace(",", "；"));
+                        }
+                    }else{
+                        boolean showTag = false;
+                        if(mEvaluate.getScoreInfo()!=null&& mEvaluate.getScoreInfo().size()>0) {
+                            for (int j = 0; j < mEvaluate.getScoreInfo().size(); j++) {
+                                if(mEvaluate.getScoreInfo().get(j).getTags()!=null && mEvaluate.getScoreInfo().get(j).getTags().size()>0){
+                                    showTag = true;
+                                }
+                            }
+                        }
+                        if(showTag){
+                            sobot_ll_lab.setVisibility(View.VISIBLE);
+                            if (TextUtils.isEmpty(mEvaluate.getTag())) {
+                                sobot_tv_lab.setText("--");
+                            } else {
+                                sobot_tv_lab.setText(mEvaluate.getTag().replace(",", "；"));
+                            }
+                        }else {
+                            sobot_ll_lab.setVisibility(View.GONE);
+                        }
+                    }
+                    if(mEvaluate.getIsQuestionFlag()==1) {
+                        sobot_ll_isSolve.setVisibility(View.VISIBLE);
+                        if (mEvaluate.getDefaultQuestionFlagValue() == 0) {
+                            sobot_tv_isSolve.setText(R.string.sobot_evaluate_no);
+                        } else if (mEvaluate.getDefaultQuestionFlagValue() == 1) {
+                            sobot_tv_isSolve.setText(R.string.sobot_evaluate_yes);
+                        } else {
+                            sobot_tv_isSolve.setText("--");
+                        }
+                    }else{
+                        sobot_ll_isSolve.setVisibility(View.GONE);
                     }
                 } else {
                     sobot_my_evaluate_tv.setVisibility(View.GONE);

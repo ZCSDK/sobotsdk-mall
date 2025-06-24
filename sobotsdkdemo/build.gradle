@@ -1,0 +1,35 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 34
+    namespace "com.sobot.demo"
+
+    defaultConfig {
+        applicationId "com.sobot.chat.tem"
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 24
+        versionName "3.3.0"
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+
+    //--------------智齿相关依赖 start-----------
+    implementation project(':sobotsdk-mall')
+    // 普通版 AndroidX：
+//    implementation  'com.sobot.chat:sobotsdk_x:3.3.5'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    //目前支持常见的几种图片加载库，必须在下面的图片加载库中选择一个添加依赖
+    //implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
+    //implementation 'com.squareup.picasso:picasso:2.71828'
+    //implementation 'com.facebook.fresco:fresco:2.6.0'
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    //--------------智齿相关依赖 end-----------
+
+
+}

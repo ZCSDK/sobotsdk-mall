@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v4.content.FileProvider;
+import androidx.core.content.FileProvider;
 
 import java.io.File;
 
@@ -149,23 +149,14 @@ public class FileOpenHelper {
         return intent;
     }
 
-    //android获取一个用于打开package文件的intent
-    public static Intent getPackageFileIntent(Context context, File file) {
-        Intent intent = new Intent();
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setAction(android.content.Intent.ACTION_VIEW);
-        Uri uri = getUri(context, file, intent);
-        intent.setDataAndType(uri, "application/vnd.android.package-archive");
-        return intent;
-    }
-
     //android获取一个用于打开不识别文件的intent
     public static Intent getOtherFileIntent(Context context, File file) {
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setAction(android.content.Intent.ACTION_VIEW);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.setAction(Intent.ACTION_VIEW);
         Uri uri = getUri(context, file, intent);
-        intent.setDataAndType(uri, "application");
+        intent.setDataAndType(uri, MapTable.getMIMEType(file.getPath()));
         return intent;
     }
 
@@ -179,8 +170,9 @@ public class FileOpenHelper {
         }
         return uri;
     }
+
     public static Uri getUri(Context context, String filePath) {
-        File file=new File(filePath);
+        File file = new File(filePath);
         return getUri(context, file);
     }
 

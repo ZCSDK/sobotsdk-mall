@@ -2,6 +2,7 @@ package com.sobot.chat.activity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
 
+import com.sobot.chat.R;
 import com.sobot.chat.SobotApi;
 import com.sobot.chat.activity.base.SobotBaseHelpCenterActivity;
 import com.sobot.chat.api.ZhiChiApi;
@@ -36,8 +38,6 @@ import com.sobot.network.http.callback.StringResultCallBack;
  */
 public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity implements View.OnClickListener {
     public static final String EXTRA_KEY_DOC = "extra_key_doc";
-
-    public static final String DEFAULT_STYLE = "<style>*,body,html,div,p,img{border:0;margin:0;padding:0;} </style>";
 
     private StDocModel mDoc;
     private WebView mWebView;
@@ -78,10 +78,10 @@ public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity impl
         mBottomBtn = findViewById(getResId("ll_bottom"));
         tv_sobot_layout_online_service = findViewById(getResId("tv_sobot_layout_online_service"));
         tv_sobot_layout_online_tel = findViewById(getResId("tv_sobot_layout_online_tel"));
-        mProblemTitle= findViewById(getResId("sobot_text_problem_title"));
+        mProblemTitle = findViewById(getResId("sobot_text_problem_title"));
         mWebView = (WebView) findViewById(getResId("sobot_webView"));
         tvOnlineService = findViewById(getResId("tv_sobot_layout_online_service"));
-        tvOnlineService.setText(ResourceUtils.getResString(this,"sobot_help_center_online_service"));
+        tvOnlineService.setText(ResourceUtils.getResString(this, "sobot_help_center_online_service"));
         tv_sobot_layout_online_service.setOnClickListener(this);
         tv_sobot_layout_online_tel.setOnClickListener(this);
         if (mInfo != null && !TextUtils.isEmpty(mInfo.getHelpCenterTelTitle()) && !TextUtils.isEmpty(mInfo.getHelpCenterTel())) {
@@ -93,6 +93,7 @@ public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity impl
         initWebView();
         displayInNotch(mWebView);
         displayInNotch(mProblemTitle);
+        displayInNotch(mBottomBtn);
     }
 
     @Override
@@ -105,26 +106,38 @@ public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity impl
                 mProblemTitle.setText(data.getQuestionTitle());
                 String answerDesc = data.getAnswerDesc();
                 if (!TextUtils.isEmpty(answerDesc)) {
+                    int zinyanColor = getResources().getColor(R.color.sobot_common_wenzi_black);
+                    StringBuffer stringBuffer = new StringBuffer();
+                    stringBuffer.append("#");
+                    stringBuffer.append(Integer.toHexString(Color.red(zinyanColor)));
+                    stringBuffer.append(Integer.toHexString(Color.green(zinyanColor)));
+                    stringBuffer.append(Integer.toHexString(Color.blue(zinyanColor)));
                     //修改图片高度为自适应宽度
                     answerDesc = "<!DOCTYPE html>\n" +
                             "<html>\n" +
                             "    <head>\n" +
                             "        <meta charset=\"utf-8\">\n" +
                             "        <title></title>\n" +
-                            "        <style>\n body{color:" + ResourceUtils.getColorById(SobotProblemDetailActivity.this, "sobot_common_wenzi_black") +
+                            "        <style>\n body{color:" + (stringBuffer != null ? stringBuffer.toString() : "") +
                             ";}\n" +
                             "            img{\n" +
                             "                width: auto;\n" +
                             "                height:auto;\n" +
                             "                max-height: 100%;\n" +
                             "                max-width: 100%;\n" +
-                            "            }\n" +
+                            "            }" +
+                            "            video{\n" +
+                            "                width: auto;\n" +
+                            "                height:auto;\n" +
+                            "                max-height: 100%;\n" +
+                            "                max-width: 100%;\n" +
+                            "            }" +
                             "        </style>\n" +
                             "    </head>\n" +
                             "    <body>" + answerDesc + "  </body>\n" +
                             "</html>";
                     //显示文本内容
-                    String html = DEFAULT_STYLE + answerDesc;
+                    String html = answerDesc.replace("<p>", "").replace("</p>", "<br/>").replace("<P>", "").replace("</P>", "<br/>");
                     mWebView.loadDataWithBaseURL("about:blank", html, "text/html", "utf-8", null);
                 }
             }
@@ -170,19 +183,22 @@ public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity impl
         mWebView.getSettings().setLoadsImagesAutomatically(true);
         mWebView.getSettings().setBlockNetworkImage(false);
         mWebView.getSettings().setSavePassword(false);
-       // mWebView.getSettings().setUserAgentString(mWebView.getSettings().getUserAgentString() + " sobot");
+        // mWebView.getSettings().setUserAgentString(mWebView.getSettings().getUserAgentString() + " sobot");
 
         //关于webview的http和https的混合请求的，从Android5.0开始，WebView默认不支持同时加载Https和Http混合模式。
         // 在API>=21的版本上面默认是关闭的，在21以下就是默认开启的，直接导致了在高版本上面http请求不能正确跳转。
         if (Build.VERSION.SDK_INT >= 21) {
-            mWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            mWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         }
+
+        //Android 4.4 以下的系统中存在一共三个有远程代码执行漏洞的隐藏接口
+        mWebView.removeJavascriptInterface("searchBoxJavaBridge_");
+        mWebView.removeJavascriptInterface("accessibility");
+        mWebView.removeJavascriptInterface("accessibilityTraversal");
 
         // 应用可以有数据库
         mWebView.getSettings().setDatabaseEnabled(true);
 
-        // 应用可以有缓存
-        mWebView.getSettings().setAppCacheEnabled(true);
         //把html中的内容放大webview等宽的一列中
         mWebView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
         mWebView.setWebViewClient(new WebViewClient() {
@@ -201,7 +217,7 @@ public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity impl
                 }
                 if (SobotOption.newHyperlinkListener != null) {
                     //如果返回true,拦截;false 不拦截
-                    boolean isIntercept = SobotOption.newHyperlinkListener.onUrlClick(getSobotBaseActivity(),url);
+                    boolean isIntercept = SobotOption.newHyperlinkListener.onUrlClick(getSobotBaseActivity(), url);
                     if (isIntercept) {
                         return true;
                     }
@@ -236,6 +252,7 @@ public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity impl
 
         });
     }
+
     private static final int REQUEST_CODE_ALBUM = 0x0111;
 
     private ValueCallback<Uri> uploadMessage;
@@ -348,12 +365,24 @@ public class SobotProblemDetailActivity extends SobotBaseHelpCenterActivity impl
     @Override
     public void onClick(View v) {
         if (v == tv_sobot_layout_online_service) {
+            if (SobotOption.openChatListener != null) {
+                boolean isIntercept = SobotOption.openChatListener.onOpenChatClick(getSobotBaseActivity(), mInfo);
+                if (isIntercept) {
+                    return;
+                }
+            }
             SobotApi.startSobotChat(getApplicationContext(), mInfo);
         }
         if (v == tv_sobot_layout_online_tel) {
             if (!TextUtils.isEmpty(mInfo.getHelpCenterTel())) {
                 if (SobotOption.functionClickListener != null) {
                     SobotOption.functionClickListener.onClickFunction(getSobotBaseActivity(), SobotFunctionType.ZC_PhoneCustomerService);
+                }
+                if (SobotOption.newHyperlinkListener != null) {
+                    boolean isIntercept = SobotOption.newHyperlinkListener.onPhoneClick(getSobotBaseActivity(), "tel:" + mInfo.getHelpCenterTel());
+                    if (isIntercept) {
+                        return;
+                    }
                 }
                 ChatUtils.callUp(mInfo.getHelpCenterTel(), getSobotBaseActivity());
             }

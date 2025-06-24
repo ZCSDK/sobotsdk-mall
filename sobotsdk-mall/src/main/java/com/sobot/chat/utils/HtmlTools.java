@@ -147,7 +147,7 @@ public class HtmlTools {
             .compile("\\[[(0-9)]+\\]");
 
 
-    private String textImagePath = ZhiChiConstant.imagePositionPath;
+    private String textImagePath;
     private Context context;
 
     private HtmlTools(Context context) {
@@ -199,7 +199,7 @@ public class HtmlTools {
         }
         widget.setMovementMethod(LinkMovementClickMethod.getInstance());
         widget.setFocusable(false);
-        Spanned span = formatRichTextWithPic(widget, content.replace("\n", "<br />"), color);
+        Spanned span = formatRichTextWithPic(widget, content.replace("&", "&amp;").replace("\n", "<br/>"), color);
         // 显示表情
         span = InputHelper.displayEmoji(context.getApplicationContext(), span);
         // 显示链接
@@ -235,11 +235,39 @@ public class HtmlTools {
         }
 
         widget.setMovementMethod(LinkMovementClickMethod.getInstance());
-        Spanned span = formatRichTextWithPic(widget, content.replace("\n", "<br/>"), color);
+        Spanned span = formatRichTextWithPic(widget, content.replace("&", "&amp;").replace("\n", "<br/>"), color);
         // 显示表情
         span = InputHelper.displayEmoji(context.getApplicationContext(), span);
         // 显示链接
         parseLinkText(context, widget, span, color, false);
+    }
+
+    /**
+     * 获取处理后的富文本
+     *
+     * @param content
+     */
+    public String getRichContent(String content) {
+        if (TextUtils.isEmpty(content)) {
+            return "";
+        }
+        if (content.contains("<p>")) {
+            content = content.replaceAll("<p>", "").replaceAll("</p>", "<br/>").replaceAll("\n", "<br/>");
+        }
+        while (content.length() > 5 && "<br/>".equals(content.substring(content.length() - 5, content.length()))) {
+            content = content.substring(0, content.length() - 5);
+        }
+        if (!TextUtils.isEmpty(content) && content.length() > 0 && "\n".equals(content.substring(content.length() - 1, content.length()))) {
+            for (int i = 0; i < content.length(); i++) {
+                int aa = content.lastIndexOf("\n");
+                if (aa == (content.length() - 1)) {
+                    content = content.substring(0, content.length() - 1);
+                } else {
+                    break;
+                }
+            }
+        }
+        return content;
     }
 
     /**
@@ -258,7 +286,7 @@ public class HtmlTools {
             content = content.replaceAll("\n", "<br/>");
         }
         widget.setMovementMethod(LinkMovementClickMethod.getInstance());
-        Spanned span = formatRichTextWithPic(widget, content.replace("\n", "<br/>"), color);
+        Spanned span = formatRichTextWithPic(widget, content.replace("&", "&amp;").replace("\n", "<br/>"), color);
         // 显示表情
         span = InputHelper.displayEmoji(context.getApplicationContext(), span);
         // 显示链接
@@ -274,10 +302,11 @@ public class HtmlTools {
      * @return
      */
     public Spanned formatRichTextWithPic(final TextView textView, final String htmlContent, final int color) {
-        return Html.fromHtml(htmlContent.replace("span", "sobotspan"), new Html.ImageGetter() {
+        return Html.fromHtml(("<span>"+htmlContent+"</span>").replace("span", "sobotspan"), new Html.ImageGetter() {
             @Override
             public Drawable getDrawable(String source) {
                 if (!TextUtils.isEmpty(source)) {
+                    textImagePath = CommonUtils.getSDCardRootPath(context);
                     Drawable drawable = null;
                     String fileString = textImagePath
                             + String.valueOf(source.hashCode());
@@ -386,8 +415,23 @@ public class HtmlTools {
         if (getWebUrl().matcher(url.toString()).matches()) {
             return true;
         } else {
-            LogUtils.i("URL 非法，请输入有效的URL链接:" + url);
             return false;
         }
+    }
+
+    public String getHTMLStr(String htmlStr) {
+        if (TextUtils.isEmpty(htmlStr)) {
+            return "";
+        }
+
+        //先将换行符保留，然后过滤标签
+        Pattern p_enter = Pattern.compile("<br/>", Pattern.CASE_INSENSITIVE);
+        Matcher m_enter = p_enter.matcher(htmlStr);
+        htmlStr = m_enter.replaceAll("\n");
+
+        //过滤html标签
+        Pattern p_html = Pattern.compile("<[^>]+>", Pattern.CASE_INSENSITIVE);
+        Matcher m_html = p_html.matcher(htmlStr);
+        return m_html.replaceAll("");
     }
 }

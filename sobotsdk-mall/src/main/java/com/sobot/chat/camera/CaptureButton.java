@@ -1,5 +1,9 @@
 package com.sobot.chat.camera;
 
+import static com.sobot.chat.camera.StCameraView.BUTTON_STATE_BOTH;
+import static com.sobot.chat.camera.StCameraView.BUTTON_STATE_ONLY_CAPTURE;
+import static com.sobot.chat.camera.StCameraView.BUTTON_STATE_ONLY_RECORDER;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
@@ -13,12 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.sobot.chat.camera.listener.StCaptureListener;
-import com.sobot.chat.camera.util.CheckPermission;
 import com.sobot.chat.camera.util.StCmeraLog;
-
-import static com.sobot.chat.camera.StCameraView.BUTTON_STATE_BOTH;
-import static com.sobot.chat.camera.StCameraView.BUTTON_STATE_ONLY_CAPTURE;
-import static com.sobot.chat.camera.StCameraView.BUTTON_STATE_ONLY_RECORDER;
 
 
 /**
@@ -309,12 +308,9 @@ public class CaptureButton extends View {
         public void run() {
             state = STATE_LONG_PRESS;   //如果按下后经过500毫秒则会修改当前状态为长按状态
             //没有录制权限
-            if (CheckPermission.getRecordState() != CheckPermission.STATE_SUCCESS) {
-                state = STATE_IDLE;
-                if (captureLisenter != null) {
-                    captureLisenter.recordError();
-                    return;
-                }
+            if(!captureLisenter.checkAutoPremission()){
+                captureLisenter.recordError();
+                return;
             }
             //启动按钮动画，外圆变大，内圆缩小
             startRecordAnimation(

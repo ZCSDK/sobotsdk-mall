@@ -1,0 +1,6 @@
+1、点击Gradle 窗口：sobotsdk Tasks build assemble
+生成aar
+
+2、根目录下有这个文件才行gradlew.bat
+
+回到项目根目录执行命令：  .\gradlew.bat publishToMavenCentralPortal

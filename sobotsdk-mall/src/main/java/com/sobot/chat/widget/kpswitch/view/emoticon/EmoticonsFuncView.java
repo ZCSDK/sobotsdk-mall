@@ -1,8 +1,9 @@
 package com.sobot.chat.widget.kpswitch.view.emoticon;
 
 import android.content.Context;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+
+import androidx.viewpager.widget.ViewPager;
 
 import com.sobot.chat.widget.kpswitch.widget.adpater.PageSetAdapter;
 import com.sobot.chat.widget.kpswitch.widget.data.PageSetEntity;

@@ -10,6 +10,8 @@ import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.sobot.chat.R;
+import com.sobot.chat.api.model.ZhiChiInitModeBase;
 import com.sobot.chat.api.model.ZhiChiMessageBase;
 import com.sobot.chat.utils.HtmlTools;
 import com.sobot.chat.utils.ResourceUtils;
@@ -64,7 +66,14 @@ public class RemindMessageHolder extends MessageHolderBase {
                 center_Remind_Info1.setVisibility(View.GONE);
                 center_Remind_Info2.setVisibility(View.VISIBLE);
                 HtmlTools.getInstance(context).setRichText(center_Remind_Info2, message
-                        .getAnswer().getMsg(), ResourceUtils.getIdByName(context, "color", "sobot_color_link_remind"));
+                        .getAnswer().getMsg(), ResourceUtils.getIdByName(context, "color", "sobot_color"));
+            } else if (message.getAnswer().getRemindType() == ZhiChiConstant.sobot_remind_type_keep_queuing_tip) {
+                rl_not_read.setVisibility(View.GONE);
+                center_Remind_Info.setVisibility(View.GONE);
+                center_Remind_Info1.setVisibility(View.GONE);
+                center_Remind_Info2.setVisibility(View.VISIBLE);
+                HtmlTools.getInstance(context).setRichText(center_Remind_Info2, message
+                        .getAnswer().getMsg(), ResourceUtils.getIdByName(context, "color", "sobot_color"));
             } else {
                 rl_not_read.setVisibility(View.GONE);
                 center_Remind_Info2.setVisibility(View.GONE);
@@ -124,7 +133,20 @@ public class RemindMessageHolder extends MessageHolderBase {
             center_Remind_Info2.setVisibility(View.GONE);
             center_Remind_Info.setVisibility(View.VISIBLE);
             center_Remind_Info1.setVisibility(View.GONE);
-            center_Remind_Info.setText(ResourceUtils.getResStrId(context,"sobot_agree_sentisive_tip"));
+            center_Remind_Info.setText(ResourceUtils.getResStrId(context, "sobot_agree_sentisive_tip"));
+        } else if (ZhiChiConstant.action_mulit_postmsg_tip_can_click.equals(message.getAction()) || ZhiChiConstant.action_mulit_postmsg_tip_nocan_click.equals(message.getAction())) {
+            rl_not_read.setVisibility(View.GONE);
+            center_Remind_Info.setVisibility(View.GONE);
+            center_Remind_Info1.setVisibility(View.GONE);
+            center_Remind_Info2.setVisibility(View.VISIBLE);
+            ZhiChiInitModeBase initMode = (ZhiChiInitModeBase) SharedPreferencesUtil.getObject(mContext,
+                    ZhiChiConstant.sobot_last_current_initModel);
+            //47可以点击，48不可点击
+            if (ZhiChiConstant.action_mulit_postmsg_tip_can_click.equals(message.getAction()) && initMode != null && initMode.getCid().equals(message.getCid())) {
+                HtmlTools.getInstance(context).setRichText(center_Remind_Info2, message.getMsg().replace("<a>", "<a href='sobot:SobotMuItiPostMsgActivty?" + message.getDeployId()+"::"+message.getMsgId() + "'>"), ResourceUtils.getIdByName(context, "color", "sobot_color"));
+            } else {
+                HtmlTools.getInstance(context).setRichText(center_Remind_Info2, message.getMsg(), ResourceUtils.getIdByName(context, "color", "sobot_color"));
+            }
         }
     }
 
@@ -137,7 +159,7 @@ public class RemindMessageHolder extends MessageHolderBase {
     private void setRemindPostMsg(Context context, TextView remindInfo, ZhiChiMessageBase message, boolean haveDH) {
         int isLeaveMsg = SharedPreferencesUtil.getIntData(context, ZhiChiConstant.sobot_msg_flag, ZhiChiConstant.sobot_msg_flag_open);
         String postMsg = (haveDH ? "，" : " ") + ResourceUtils.getResString(context, "sobot_can") + "<a href='sobot:SobotPostMsgActivity'> " + ResourceUtils.getResString(context, "sobot_str_bottom_message") + "</a>";
-        String content = message.getAnswer().getMsg().replace("<br/>", "").replace("<p>", "").replace("</p>", "");
+        String content = message.getAnswer().getMsg().replace("<p>", "").replace("</p>", "").replace("\n", "<br/>");
         if (isLeaveMsg == ZhiChiConstant.sobot_msg_flag_open) {
             content = content + postMsg;
         }
@@ -152,8 +174,9 @@ public class RemindMessageHolder extends MessageHolderBase {
      * @param remindInfo
      */
     private void setRemindToCustom(Context context, TextView remindInfo) {
-        String content = ResourceUtils.getResString(context, "sobot_cant_solve_problem") + "<a href='sobot:SobotToCustomer'> " + ResourceUtils.getResString(context, "sobot_customer_service") + "</a>";
-        HtmlTools.getInstance(context).setRichText(remindInfo, content, ResourceUtils.getIdByName
+        String content = context.getResources().getString(R.string.sobot_cant_solve_problem_new);
+        String click = "<a href='sobot:SobotToCustomer'> " + context.getResources().getString(R.string.sobot_customer_service) + "</a>";
+        HtmlTools.getInstance(context).setRichText(remindInfo, String.format(content,click),ResourceUtils.getIdByName
                 (context, "color", "sobot_color_link_remind"));
         remindInfo.setEnabled(true);
     }

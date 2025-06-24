@@ -37,7 +37,7 @@
     <string name="sobot_outline_openNewWindows">您打开了新窗口，本次会话结束</string>
     <string name="sobot_voiceTooLong">录音时间过长</string>
     <string name="sobot_count_down">倒计时:</string>
-    <string name="sobot_reunicon">点击重新连接</string>
+    <string name="sobot_reunicon">重新加载</string>
     <string name="sobot_ctrl_v_success">复制成功！</string>
     <string name="sobot_ctrl_copy">复制</string>
     <string name="sobot_network_unavailable">当前网络不可用，请检查您的网络设置</string>
@@ -45,7 +45,7 @@
     <string name="sobot_scan_qr_code">识别二维码</string>
     <string name="sobot_outline_leverByManager">您好,本次会话已结束</string>
     <string name="sobot_completed_the_evaluation">您已完成评价</string>
-    <string name="sobot_already_save_to_picture">已保存到系统相册</string>
+    <string name="sobot_already_save_to_picture">保存成功</string>
     <string name="sobot_unable_to_evaluate">暂时无法评价</string>
     <string name="sobot_data_wrong_hint">数据错误</string>
     <string name="sobot_server_request_wrong">服务器请求错误！</string>
@@ -223,7 +223,7 @@
 
     <!-- 2.8.7 新增-->
     <string name="sobot_do_you_delete_video">要删除这个视频吗?</string>
-    <string name="sobot_outline_leavemsg">您的留言已经提交成功，此会话已结束，如需继续咨询可点击下方 重建会话 按钮。</string>
+    <string name="sobot_outline_leavemsg">您的留言已经提交成功，此会话已结束，如需继续咨询可点击下方 重建会话 按钮。</string>
 
     <!-- 2.9.0 新增-->
     <string name="sobot_previous_page">上一页</string>
@@ -243,6 +243,8 @@
 
     <!-- 3.0.3 新增-->
     <string name="sobot_cant_solve_problem">未解决问题？点击</string>
+    <!-- 3.2.4 优化  -->
+    <string name="sobot_cant_solve_problem_new">未解决问题？点击 %s </string>
     <string name="sobot_customer_service">转人工服务</string>
 
     <!-- 3.0.5 新增-->
@@ -254,6 +256,47 @@
 
     <!-- 3.0.6 新增-->
     <string name="sobot_no_support_call">该设备不支持拨打电话</string>
+    <!-- 3.1.1 新增-->
+    <string name="sobot_enclosure_string">附件</string>
 
+    <!-- 3.1.3 新增-->
+    <string name="sobot_write_info_string">填写信息</string>
+    <string name="sobot_line_up_close_chat">排队自动断开结束会话</string>
 
+    <!-- 3.1.4 新增-->
+    <string name="sobot_mini_program">小程序</string>
+    <string name="sobot_mini_program_only_open_by_weixin">小程序只能通过微信打开</string>
+    <string name="sobot_parsing">解析中...</string>
+    <!-- 3.1.5 新增-->
+    <string name="sobot_keep_queuing">继续排队</string>
+    <string name="sobot_keep_queuing_string">如果继续等待，点击</string>
+    <string name="sobot_ding">顶</string>
+    <string name="sobot_cai">踩</string>
+    <string name="sobot_re_commit">您未提交信息，请</string>
+    <string name="sobot_re_write">重新填写信息</string>
+    <!--3.2.3-->
+    <string name="sobot_outline_closed">会话已结束，可重新发起咨询</string>
+    <!--3.2.4-->
+    <string name="sobot_str_please_check_is_solve">请选择是否解决了您的问题</string>
+    <!--   3.2.5   -->
+    <string name="sobot_evaluate_lab">标签：</string>
+    <string name="sobot_evaluate_issolve">是否解决：</string>
+    <!--   3.3.1   -->
+    <string name="sobot_str_select_pic_video">选择照片和视频</string>
+    <string name="sobot_str_goto_setting_info">当前仅允许访问部分照片或视频</string>
+    <string name="sobot_str_goto_setting_allow">允许全部 ></string>
+    <!--   3.3.1   -->
+    <string name="sobot_permission_use_info">权限使用说明</string>
+    <string name="sobot_album_permission_yongtu">正在申请您的照片和视频访问及使用权限。允许后，在咨询客服和留言时可发送照片和视频</string>
+    <string name="sobot_please_open_album">请求使用相册权限</string>
+    <string name="sobot_use_album">用于访问及使用此设备上的照片和视频</string>
+    <string name="sobot_camera_permission_yongtu">正在申请您的相机使用权限。允许后，在咨询客服和留言时可拍照和录制视频进行上传</string>
+    <string name="sobot_please_open_camera">请求开启相机权限</string>
+    <string name="sobot_use_camera">用于获取相机的使用权限</string>
+    <string name="sobot_microphone_permission_yongtu">正在申请您的麦克风使用权限。允许后，在咨询客服时可发送语音消息</string>
+    <string name="sobot_please_open_microphone">请求开启麦克风权限</string>
+    <string name="sobot_use_microphone">用于获取麦克风的使用权限</string>
+    <string name="sobot_storage_permission_yongtu">正在申请您的文件访问及使用权限。允许后，在咨询客服和留言时可发送文件</string>
+    <string name="sobot_please_open_storage">请求使用存储权限</string>
+    <string name="sobot_use_storage">用于访问及使用此设备上的文件</string>
 </resources>

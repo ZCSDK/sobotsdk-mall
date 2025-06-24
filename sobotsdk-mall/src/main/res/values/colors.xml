@@ -103,6 +103,10 @@
     <color name="sobot_chat_left_bgColor">@color/sobot_common_gray4</color>
     <!-- 消息气泡右侧背景默认颜色 -->
     <color name="sobot_chat_right_bgColor">@color/sobot_color</color>
+    <!-- 左侧消息气泡昵称颜色 -->
+    <color name="sobot_chat_left_nikename_color">@color/sobot_common_gray2</color>
+    <!-- 右侧消息气泡昵称颜色 -->
+    <color name="sobot_chat_right_nikename_color">@color/sobot_common_gray2</color>
 
     <!-- 底部 -->
     <!-- 点击加号后 面板背景 -->
@@ -204,9 +208,19 @@
 
     <!--文件进度条前景色-->
     <color name="sobot_sectorProgressView_fgColor">#4D000000</color>
+    <!--半透明-->
+    <color name="sobot_half_transparent">#73000000</color>
+    <!--状态栏半透明-->
+    <color name="sobot_status_bar_transparent">#E6333333</color>
+
 
     <!--自动补全背景色-->
     <color name="sobot_auto_complete_press">#EFF3FA</color>
     <color name="sobot_auto_complete">@color/sobot_white</color>
+
+    <!--顶踩选中 边框色-->
+    <color name="sobot_dingcai_sel_bg">#200DAEAF</color>
+    <!--顶踩选中 背景色-->
+    <color name="sobot_dingcai_stroke_color">#350DAEAF</color>
 
 </resources>

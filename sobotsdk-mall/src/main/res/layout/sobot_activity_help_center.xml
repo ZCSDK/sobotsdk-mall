@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/view_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/sobot_common_bg"
@@ -16,7 +17,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:orientation="vertical"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/tv_sobot_help_center_no_data"

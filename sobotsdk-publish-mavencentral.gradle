@@ -1,0 +1,76 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'tech.yanand.maven-central-publish'
+
+tasks.register('androidSourcesJar', Jar) {
+    archiveClassifier = 'sources'
+    from android.sourceSets.main.java.source
+
+    exclude "**/R.class"
+    exclude "**/BuildConfig.class"
+}
+
+ext {
+    PUBLISH_GROUP_ID = "com.sobot.chat"        //项目包名
+//    PUBLISH_ARTIFACT_ID = 'sdk_demo'            //测试项目名
+    PUBLISH_ARTIFACT_ID = 'sobotsdk-mall'            //项目名
+    PUBLISH_VERSION = '3.3.5'                    //版本号
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId PUBLISH_GROUP_ID
+            artifactId PUBLISH_ARTIFACT_ID
+            version PUBLISH_VERSION
+
+            // Two artifacts, the `aar` and the sources
+            artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+            artifact androidSourcesJar
+
+            // Self-explanatory metadata for the most part
+            pom {
+                name = PUBLISH_ARTIFACT_ID
+                description = 'sobot sdk'
+                // If your project has a dedicated site, use its URL here
+                url = 'https://github.com/ZCSDK/sobotsdk'
+                licenses {
+                    license {
+                        //协议类型，一般默认Apache License2.0的话不用改：
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'app_dev@sobot.com'
+                        name = 'zhichi'
+                        email = 'app_dev@sobot.com'
+                    }
+                }
+                // Version control info, if you're using GitHub, follow the format as seen here
+                scm {
+                    //修改成你的Git地址：
+                    connection = 'scm:git:github.com/ZCSDK/sobotsdk.git'
+                    developerConnection = 'scm:git:ssh://github.com/ZCSDK/sobotsdk.git'
+                    //分支地址：
+                    url = 'https://github.com/ZCSDK/sobotsdk/master'
+                }
+            }
+        }
+    }
+}
+signing {
+    sign publishing.publications
+}
+
+mavenCentral {
+    authToken = rootProject.ext.has("authTokenValue") ? rootProject.ext.authTokenValue : ""
+    // 上传是否应该自动发布。如果您希望手动执行此操作，请使用 'USER_MANAGED'。
+    // 该属性是可选的，默认为 'AUTOMATIC'。
+    publishingType = "USER_MANAGED"
+    // 当发布类型为 'AUTOMATIC' 时，状态API获取 'PUBLISHING' 或 'PUBLISHED' 状态的最大等待时间
+    // 或者当发布类型为 'USER_MANAGED' 时，获取 'VALIDATED' 状态。
+    // 该属性是可选的，默认为60秒。
+    maxWait = 60
+}

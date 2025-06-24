@@ -1,5 +1,6 @@
 package com.sobot.chat.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -14,18 +15,21 @@ import com.sobot.chat.api.model.SobotEvaluateModel;
 import com.sobot.chat.api.model.SobotMultiDiaRespInfo;
 import com.sobot.chat.api.model.ZhiChiMessageBase;
 import com.sobot.chat.api.model.ZhiChiReplyAnswer;
+import com.sobot.chat.utils.ChatUtils;
 import com.sobot.chat.utils.DateUtil;
 import com.sobot.chat.utils.LogUtils;
 import com.sobot.chat.utils.ResourceUtils;
 import com.sobot.chat.utils.SharedPreferencesUtil;
 import com.sobot.chat.utils.VersionUtils;
 import com.sobot.chat.utils.ZhiChiConstant;
+import com.sobot.chat.viewHolder.ArticleMessageHolder;
 import com.sobot.chat.viewHolder.CardMessageHolder;
 import com.sobot.chat.viewHolder.ConsultMessageHolder;
 import com.sobot.chat.viewHolder.CusEvaluateMessageHolder;
 import com.sobot.chat.viewHolder.FileMessageHolder;
 import com.sobot.chat.viewHolder.ImageMessageHolder;
 import com.sobot.chat.viewHolder.LocationMessageHolder;
+import com.sobot.chat.viewHolder.MiniProgramMessageHolder;
 import com.sobot.chat.viewHolder.NoticeMessageHolder;
 import com.sobot.chat.viewHolder.OrderCardMessageHolder;
 import com.sobot.chat.viewHolder.RemindMessageHolder;
@@ -41,6 +45,7 @@ import com.sobot.chat.viewHolder.RobotTemplateMessageHolder4;
 import com.sobot.chat.viewHolder.RobotTemplateMessageHolder5;
 import com.sobot.chat.viewHolder.RobotTemplateMessageHolder6;
 import com.sobot.chat.viewHolder.SobotChatMsgItemSDKHistoryR;
+import com.sobot.chat.viewHolder.SobotMuitiLeavemsgMessageHolder;
 import com.sobot.chat.viewHolder.SystemMessageHolder;
 import com.sobot.chat.viewHolder.TextMessageHolder;
 import com.sobot.chat.viewHolder.VideoMessageHolder;
@@ -85,7 +90,10 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
             "sobot_chat_msg_item_card_l",//商品卡片左侧信息的布局文件
             "sobot_chat_msg_item_template6_l",//机器人  多轮会话模板 6
             "sobot_chat_msg_item_system_tip",//防诈骗系统消息的布局文件
-            "sobot_chat_msg_item_video_l"//小视频左边的布局文件
+            "sobot_chat_msg_item_video_l",//小视频左边的布局文件
+            "sobot_chat_msg_item_muiti_leave_msg",//小视频左边的布局文件
+            "sobot_chat_msg_item_mini_program_card_l",//小程序卡片左侧消息
+            "sobot_chat_msg_item_article_card_l"//文章卡片左侧消息
     };
 
     /**
@@ -219,20 +227,57 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
      */
     public static final int MSG_TYPE_VIDEO_L = 30;
 
-    private String senderface;
-    private String sendername;
+    /**
+     * 多伦节点留言
+     */
+    public static final int MSG_TYPE_MUITI_LEAVE_MSG_R = 31;
+
+    /**
+     * 小程序卡片左侧消息
+     */
+    public static final int MSG_TYPE_MINIPROGRAM_CARD_L = 32;
+
+    /**
+     * 文章卡片左侧消息
+     */
+    public static final int MSG_TYPE_ARTICLE_CARD_L = 33;
+
 
     private SobotMsgCallBack mMsgCallBack;
 
-    public SobotMsgAdapter(Context context, List<ZhiChiMessageBase> list, SobotMsgCallBack msgCallBack) {
+    public SobotMsgAdapter(Activity context, List<ZhiChiMessageBase> list, SobotMsgCallBack msgCallBack) {
         super(context, list);
         mMsgCallBack = msgCallBack;
-        senderface = SharedPreferencesUtil.getStringData(context, "sobot_current_sender_face", "");
-        sendername = SharedPreferencesUtil.getStringData(context, "sobot_current_sender_name", "");
     }
 
     public void addData(List<ZhiChiMessageBase> moreList) {
+        if (moreList == null) {
+            return;
+        }
         setDefaultCid(moreList);
+        long previousMsgTime = 0;
+        String previousMsgSenderName = "";
+        for (int i = 0; i < moreList.size(); i++) {
+            ZhiChiMessageBase base = moreList.get(i);
+            //相邻两条消息是同一个人发的，并且时间相隔1分钟，不显示头像昵称
+            if (previousMsgTime != 0 &&
+                    !TextUtils.isEmpty(base.getT())
+                    && ((Long.parseLong(base.getT()) - previousMsgTime) < (1000 * 60))
+                    && !TextUtils.isEmpty(previousMsgSenderName)
+                    && previousMsgSenderName.equals(base.getSenderType())) {
+                base.setShowFaceAndNickname(false);
+            } else {
+                base.setShowFaceAndNickname(true);
+            }
+            if (base.getT() != null) {
+                try {
+                    previousMsgTime = Long.parseLong(base.getT());
+                } catch (Exception e) {
+
+                }
+            }
+            previousMsgSenderName = base.getSenderType();
+        }
         list.addAll(0, moreList);
     }
 
@@ -275,6 +320,10 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
         removeByAction(message, ZhiChiConstant.action_remind_connt_success, ZhiChiConstant
                 .action_remind_info_zhuanrengong, false);
 
+        //  转人工后移除继续排队的提示语消息
+        removeByAction(message, ZhiChiConstant.action_remind_connt_success, ZhiChiConstant
+                .action_remind_keep_queuing, false);
+
         if (message.getAction() != null && message.getAction().equals(ZhiChiConstant.action_remind_past_time)
                 && message.getAnswer() != null && ZhiChiConstant.sobot_remind_type_outline == message.getAnswer().getRemindType()) {
             for (int i = 0; i < list.size(); i++) {
@@ -297,6 +346,52 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
         }
         String lastCid = SharedPreferencesUtil.getStringData(context, "lastCid", "");
         setDefaultCid(lastCid, message);
+        if (message.getAnswers() != null && message.getAnswers().size() > 0) {
+            for (int i = 0; i < message.getAnswers().size(); i++) {
+                ZhiChiMessageBase zhiChiMessageBase = ChatUtils.clone(message);
+                if (zhiChiMessageBase != null) {
+                    ZhiChiReplyAnswer answer = message.getAnswers().get(i);
+                    zhiChiMessageBase.setAnswer(answer);
+                    if (i != (message.getAnswers().size() - 1)) {
+                        //只有最后一个显示顶踩
+                        zhiChiMessageBase.setRevaluateState(0);
+                        //只有最后一个显示转人工按钮
+                        zhiChiMessageBase.setShowTransferBtn(false);
+                        //只有最后一个显示关联问题
+                        zhiChiMessageBase.setSugguestions(null);
+                        zhiChiMessageBase.setListSuggestions(null);
+                        zhiChiMessageBase.setStripe("");
+                    }
+                    addMsg(zhiChiMessageBase);
+                }
+            }
+        } else {
+            addMsg(message);
+        }
+
+    }
+
+    private void addMsg(ZhiChiMessageBase message) {
+        if (message == null) {
+            return;
+        }
+        try {
+            if (list.size() > 0 && (list.get(list.size() - 1) != null) && !TextUtils.isEmpty(list.get(list.size() - 1).getT())) {
+                long previousMsgTime = Long.parseLong(list.get(list.size() - 1).getT());
+                String previousMsgSenderName = list.get(list.size() - 1).getSenderName();
+                //相邻两条消息是同一个人发的，并且时间相隔1分钟，不显示头像昵称
+                if (previousMsgTime != 0 &&
+                        !TextUtils.isEmpty(message.getT())
+                        && ((Long.parseLong(message.getT()) - previousMsgTime) < (1000 * 60))
+                        && !TextUtils.isEmpty(previousMsgSenderName)
+                        && previousMsgSenderName.equals(message.getSenderName())) {
+                    message.setShowFaceAndNickname(false);
+                } else {
+                    message.setShowFaceAndNickname(true);
+                }
+            }
+        } catch (Exception e) {
+        }
         list.add(message);
     }
 
@@ -317,6 +412,22 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
                         list.remove(i);
                         message.setShake(isShake);
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * 删除已有的数据
+     *
+     * @param when 当前数据类型（action）=when时   才进行删除操作
+     */
+    public void removeByAction(String when) {
+        //倒叙判断，然后删
+        for (int i = list.size() - 1; i >= 0; i--) {
+            if (list.get(i).getAction() != null) {
+                if (list.get(i).getAction().equals(when)) {
+                    list.remove(i);
                 }
             }
         }
@@ -365,6 +476,7 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
         }
     }
 
+
     public void updateVoiceStatusById(String id, int sendStatus, String duration) {
         ZhiChiMessageBase info = getMsgInfo(id);
         if (info != null) {
@@ -383,6 +495,7 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
             info.setSentisiveExplain(data.getSentisiveExplain());
             info.setClickCancleSend(data.isClickCancleSend());
             info.setShowSentisiveSeeAll(data.isShowSentisiveSeeAll());
+            info.setDesensitizationWord(data.getDesensitizationWord());
         }
     }
 
@@ -419,13 +532,25 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
     }
 
     private ZhiChiMessageBase getMsgInfo(String id) {
-
         for (int i = list.size() - 1; i >= 0; i--) {
             ZhiChiMessageBase msgInfo = list.get(i);
             if (msgInfo == null) {
                 continue;
             }
             if (msgInfo.getId() != null && msgInfo.getId().equals(id)) {
+                return msgInfo;
+            }
+        }
+        return null;
+    }
+
+    public ZhiChiMessageBase getMsgInfoByMsgId(String msgId) {
+        for (int i = list.size() - 1; i >= 0; i--) {
+            ZhiChiMessageBase msgInfo = list.get(i);
+            if (msgInfo == null) {
+                continue;
+            }
+            if (msgInfo.getMsgId() != null && msgInfo.getMsgId().equals(msgId)) {
                 return msgInfo;
             }
         }
@@ -456,9 +581,9 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
             MessageHolderBase holder = (MessageHolderBase) convertView.getTag();
             holder.setMsgCallBack(mMsgCallBack);
             handerRemindTiem(holder, position);
-            holder.initNameAndFace(itemType, context, message, senderface, sendername);
             holder.applyCustomUI();//设置UI
             holder.bindZhiChiMessageBase(message);//设置message
+            holder.initNameAndFace(itemType);
             holder.bindData(context, message);
         }
         return convertView;
@@ -598,6 +723,18 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
                     holder = new SystemMessageHolder(context, convertView);
                     break;
                 }
+                case MSG_TYPE_MUITI_LEAVE_MSG_R: {
+                    holder = new SobotMuitiLeavemsgMessageHolder(context, convertView);
+                    break;
+                }
+                case MSG_TYPE_MINIPROGRAM_CARD_L: {
+                    holder = new MiniProgramMessageHolder(context, convertView);
+                    break;
+                }
+                case MSG_TYPE_ARTICLE_CARD_L: {
+                    holder = new ArticleMessageHolder(context, convertView);
+                    break;
+                }
                 default: {
                     holder = new TextMessageHolder(context, convertView);
                     break;
@@ -692,30 +829,22 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
                         }
                     } else if (ZhiChiConstant.message_type_pic == Integer.parseInt(message
                             .getAnswer().getMsgType())) {
-                        if (ZhiChiConstant.message_sender_type_robot == Integer
-                                .parseInt(message.getSenderType())
-                                || ZhiChiConstant.message_sender_type_service == Integer
+                        if (ZhiChiConstant.message_sender_type_customer == Integer
                                 .parseInt(message.getSenderType())) {
-
-                            return MSG_TYPE_IMG_L;
-                        } else if (ZhiChiConstant.message_sender_type_customer == Integer
-                                .parseInt(message.getSenderType())) {
-
                             return MSG_TYPE_IMG_R;
+                        } else {
+                            return MSG_TYPE_IMG_L;
                         }
                     } else if (ZhiChiConstant.message_type_voice == Integer
                             .parseInt(message.getAnswer().getMsgType())) {
-                        if (ZhiChiConstant.message_sender_type_robot == Integer
-                                .parseInt(message.getSenderType())
-                                || ZhiChiConstant.message_sender_type_service == Integer
-                                .parseInt(message.getSenderType())) {
-                            return MSG_TYPE_ILLEGAL;
-                        } else if (ZhiChiConstant.message_sender_type_customer == Integer
+                        if (ZhiChiConstant.message_sender_type_customer == Integer
                                 .parseInt(message.getSenderType())) {
                             if (message.getAnswer() != null && !TextUtils.isEmpty(message.getAnswer().getMsgTransfer())) {
                                 return MSG_TYPE_TXT_R;
                             }
                             return MSG_TYPE_AUDIO_R;
+                        } else {
+                            return MSG_TYPE_ILLEGAL;
                         }
 
                     } else if (ZhiChiConstant.message_type_emoji == Integer
@@ -785,24 +914,20 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
                             }
                         }
                     } else if (ZhiChiConstant.message_type_file.equals(message.getAnswer().getMsgType())) {
-                        if (ZhiChiConstant.message_sender_type_service == Integer
-                                .parseInt(message.getSenderType())) {
-                            return MSG_TYPE_FILE_L;
-                        } else if (ZhiChiConstant.message_sender_type_customer == Integer
+                        if (ZhiChiConstant.message_sender_type_customer == Integer
                                 .parseInt(message.getSenderType())) {
                             return MSG_TYPE_FILE_R;
+                        } else {
+                            return MSG_TYPE_FILE_L;
                         }
                     } else if (ZhiChiConstant.message_type_video.equals(message.getAnswer().getMsgType())) {
-                        if (ZhiChiConstant.message_sender_type_service == Integer
-                                .parseInt(message.getSenderType())) {
-                            if (message.getAnswer().getCacheFile() != null) {
-                                return MSG_TYPE_VIDEO_L;
-                            }
-                        } else if (ZhiChiConstant.message_sender_type_customer == Integer
+                        if (ZhiChiConstant.message_sender_type_customer == Integer
                                 .parseInt(message.getSenderType())) {
                             if (message.getAnswer().getCacheFile() != null) {
                                 return MSG_TYPE_VIDEO_R;
                             }
+                        } else {
+                            return MSG_TYPE_VIDEO_L;
                         }
                     } else if (ZhiChiConstant.message_type_location.equals(message.getAnswer().getMsgType())) {
                         if (ZhiChiConstant.message_sender_type_customer == Integer
@@ -814,25 +939,32 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
                     } else if (ZhiChiConstant.message_type_card == Integer
                             .parseInt(message.getAnswer().getMsgType())) {
                         if (message.getConsultingContent() != null) {
-                            if (ZhiChiConstant.message_sender_type_service == Integer
-                                    .parseInt(message.getSenderType())) {
-                                return MSG_TYPE_CARD_L;
-                            } else if (ZhiChiConstant.message_sender_type_customer == Integer
+                            if (ZhiChiConstant.message_sender_type_customer == Integer
                                     .parseInt(message.getSenderType())) {
                                 return MSG_TYPE_CARD_R;
+                            } else {
+                                return MSG_TYPE_CARD_L;
                             }
                         }
                     } else if (ZhiChiConstant.message_type_ordercard == Integer
                             .parseInt(message.getAnswer().getMsgType())) {
                         if (message.getOrderCardContent() != null) {
-                            if (ZhiChiConstant.message_sender_type_service == Integer
-                                    .parseInt(message.getSenderType())) {
-                                return MSG_TYPE_ROBOT_ORDERCARD_L;
-                            } else if (ZhiChiConstant.message_sender_type_customer == Integer
+                            if (ZhiChiConstant.message_sender_type_customer == Integer
                                     .parseInt(message.getSenderType())) {
                                 return MSG_TYPE_ROBOT_ORDERCARD_R;
+                            } else {
+                                return MSG_TYPE_ROBOT_ORDERCARD_L;
                             }
                         }
+                    } else if (ZhiChiConstant.message_type_miniprogram_card == Integer
+                            .parseInt(message.getAnswer().getMsgType())) {
+                        if (message.getMiniProgramModel() != null) {
+                            return MSG_TYPE_MINIPROGRAM_CARD_L;
+                        }
+                    } else if (ZhiChiConstant.message_type_muiti_leave_msg.equals(message.getAnswer().getMsgType())) {
+                        return MSG_TYPE_MUITI_LEAVE_MSG_R;
+                    } else if (ZhiChiConstant.message_type_article_card_msg.equals(message.getAnswer().getMsgType())) {
+                        return MSG_TYPE_ARTICLE_CARD_L;
                     }
                 } else {
                     return MSG_TYPE_ILLEGAL;
@@ -864,8 +996,14 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
                     .parseInt(message.getAction())) {
                 //防诈骗消息
                 return MSG_TYPE_FRAUD_PREVENTION;
-            }else if (ZhiChiConstant.action_sensitive_auth_agree.equals(message.getAction())) {
+            } else if (ZhiChiConstant.action_sensitive_auth_agree.equals(message.getAction())) {
                 //发送消息触发隐私，同意后的系统消息
+                return MSG_TYPE_TIP;
+            } else if (ZhiChiConstant.action_mulit_postmsg_tip_can_click.equals(message.getAction())) {
+                //多轮收集节点提醒消息 可以点击
+                return MSG_TYPE_TIP;
+            } else if (ZhiChiConstant.action_mulit_postmsg_tip_nocan_click.equals(message.getAction())) {
+                //多轮收集节点提醒消息 不可以点击
                 return MSG_TYPE_TIP;
             }
         } catch (Exception e) {
@@ -1021,5 +1159,7 @@ public class SobotMsgAdapter extends SobotBaseAdapter<ZhiChiMessageBase> {
         void removeMessageByMsgId(String msgid);
 
         void addMessage(ZhiChiMessageBase message);
+
+        void mulitDiaToLeaveMsg(String leaveTemplateId, String tipMsgId);
     }
 }

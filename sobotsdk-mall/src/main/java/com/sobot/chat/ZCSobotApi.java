@@ -1,10 +1,17 @@
 package com.sobot.chat;
 
+import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_CONFIG;
+import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_UID;
+import static com.sobot.chat.utils.ZhiChiConstant.SOBOT_LANGUAGE_STRING_PATH;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
+
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -13,6 +20,7 @@ import com.sobot.chat.activity.SobotHelpCenterActivity;
 import com.sobot.chat.activity.SobotPostMsgActivity;
 import com.sobot.chat.api.ZhiChiApi;
 import com.sobot.chat.api.apiUtils.SobotApp;
+import com.sobot.chat.api.apiUtils.SobotBaseUrl;
 import com.sobot.chat.api.apiUtils.ZhiChiUrlApi;
 import com.sobot.chat.api.enumtype.SobotChatAvatarDisplayMode;
 import com.sobot.chat.api.enumtype.SobotChatStatusMode;
@@ -21,8 +29,6 @@ import com.sobot.chat.api.model.CommonModel;
 import com.sobot.chat.api.model.ConsultingContent;
 import com.sobot.chat.api.model.Information;
 import com.sobot.chat.api.model.OrderCardContentModel;
-import com.sobot.chat.api.model.SobotCusFieldConfig;
-import com.sobot.chat.api.model.SobotFieldModel;
 import com.sobot.chat.api.model.SobotLeaveMsgConfig;
 import com.sobot.chat.api.model.SobotLeaveReplyModel;
 import com.sobot.chat.api.model.SobotLocationModel;
@@ -30,14 +36,16 @@ import com.sobot.chat.api.model.SobotMsgCenterModel;
 import com.sobot.chat.api.model.SobotTransferOperatorParam;
 import com.sobot.chat.api.model.ZhiChiInitModeBase;
 import com.sobot.chat.conversation.SobotChatActivity;
-import com.sobot.chat.core.HttpUtils;
 import com.sobot.chat.core.channel.Const;
 import com.sobot.chat.core.channel.SobotMsgManager;
 import com.sobot.chat.listener.HyperlinkListener;
 import com.sobot.chat.listener.NewHyperlinkListener;
 import com.sobot.chat.listener.SobotChatStatusListener;
 import com.sobot.chat.listener.SobotFunctionClickListener;
+import com.sobot.chat.listener.SobotHelpPageOpenChatListener;
+import com.sobot.chat.listener.SobotImagePreviewListener;
 import com.sobot.chat.listener.SobotLeaveMsgListener;
+import com.sobot.chat.listener.SobotMiniProgramClickListener;
 import com.sobot.chat.listener.SobotNoReadLeaveReplyListener;
 import com.sobot.chat.listener.SobotOrderCardListener;
 import com.sobot.chat.presenter.StPostMsgPresenter;
@@ -56,16 +64,10 @@ import com.sobot.chat.utils.ZhiChiConstant;
 import com.sobot.network.apiUtils.SobotHttpUtils;
 import com.sobot.network.http.callback.StringResultCallBack;
 
-import java.io.File;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
-
-import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_CONFIG;
-import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_UID;
-import static com.sobot.chat.utils.ZhiChiConstant.SOBOT_LANGUAGE_STRING_PATH;
 
 /**
  * SobotChatApi接口输出类
@@ -167,18 +169,6 @@ public class ZCSobotApi {
                     public void onSuccess(final ZhiChiInitModeBase initModel) {
                         SharedPreferencesUtil.saveObject(context,
                                 ZhiChiConstant.sobot_last_current_info, info);
-                        final List<SobotFieldModel> sobotFieldModels = new ArrayList<>();
-                        if (info.getLeaveCusFieldMap() != null && info.getLeaveCusFieldMap().size() > 0) {
-                            for (String key :
-                                    info.getLeaveCusFieldMap().keySet()) {
-                                SobotFieldModel sobotFieldModel = new SobotFieldModel();
-                                SobotCusFieldConfig sobotCusFieldConfig = new SobotCusFieldConfig();
-                                sobotCusFieldConfig.setFieldId(key);
-                                sobotCusFieldConfig.setValue(info.getLeaveCusFieldMap().get(key));
-                                sobotFieldModel.setCusFieldConfig(sobotCusFieldConfig);
-                                sobotFieldModels.add(sobotFieldModel);
-                            }
-                        }
                         if (!TextUtils.isEmpty(info.getLeaveTemplateId())) {
                             SobotMsgManager.getInstance(context).getZhiChiApi().getMsgTemplateConfig(this, initModel.getPartnerid(), info.getLeaveTemplateId(), new StringResultCallBack<SobotLeaveMsgConfig>() {
                                 @Override
@@ -191,7 +181,6 @@ public class ZCSobotApi {
                                         intent.putExtra(StPostMsgPresenter.INTENT_KEY_CUSTOMERID, initModel.getCustomerId());
                                         intent.putExtra(ZhiChiConstant.FLAG_EXIT_SDK, false);
                                         intent.putExtra(StPostMsgPresenter.INTENT_KEY_GROUPID, info.getLeaveMsgGroupId());
-                                        intent.putExtra(StPostMsgPresenter.INTENT_KEY_CUS_FIELDS, (Serializable) sobotFieldModels);
                                         intent.putExtra(StPostMsgPresenter.INTENT_KEY_IS_SHOW_TICKET, isOnlyShowTicket);
                                         context.startActivity(intent);
                                     }
@@ -231,7 +220,6 @@ public class ZCSobotApi {
                             intent.putExtra(StPostMsgPresenter.INTENT_KEY_CUSTOMERID, initModel.getCustomerId());
                             intent.putExtra(ZhiChiConstant.FLAG_EXIT_SDK, false);
                             intent.putExtra(StPostMsgPresenter.INTENT_KEY_GROUPID, info.getLeaveMsgGroupId());
-                            intent.putExtra(StPostMsgPresenter.INTENT_KEY_CUS_FIELDS, (Serializable) sobotFieldModels);
                             intent.putExtra(StPostMsgPresenter.INTENT_KEY_IS_SHOW_TICKET, isOnlyShowTicket);
                             context.startActivity(intent);
                         }
@@ -523,8 +511,9 @@ public class ZCSobotApi {
      * 关闭通道，退出客服，用于用户退出登录时调用
      *
      * @param context 上下文对象
+     * @param reason  手动结束会话的原因，非必填
      */
-    public static void outCurrentUserZCLibInfo(final Context context) {
+    public static void outCurrentUserZCLibInfo(final Context context, String reason) {
         SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_IS_EXIT, true);
         if (context == null) {
             return;
@@ -544,7 +533,10 @@ public class ZCSobotApi {
 
             if (!TextUtils.isEmpty(cid) && !TextUtils.isEmpty(uid)) {
                 ZhiChiApi zhiChiApi = SobotMsgManager.getInstance(context).getZhiChiApi();
-                zhiChiApi.out(cid, uid, new StringResultCallBack<CommonModel>() {
+                if (TextUtils.isEmpty(reason)) {
+                    reason = "客户手动调用结束会话";
+                }
+                zhiChiApi.out(cid, uid, reason, new StringResultCallBack<CommonModel>() {
                     @Override
                     public void onSuccess(CommonModel result) {
                         LogUtils.i("下线成功");
@@ -572,27 +564,34 @@ public class ZCSobotApi {
             Log.e(Tag, "initSobotSDK  参数为空 context:" + context + "  appkey:" + appkey);
             return;
         }
-
-        SobotHttpUtils.init(context);
-        SobotApp.setApplicationContext(context);
-        SharedPreferencesUtil.saveAppKey(context, appkey);
-
-        SharedPreferencesUtil.saveStringData(context, Const.SOBOT_APPKEY, appkey);
-        SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_CONFIG_INITSDK, true);
-        SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_CONFIG_APPKEY, appkey);
-        //清空sdk 语言设置
-        SharedPreferencesUtil.saveObject(context, "SobotLanguage", null);
-        if (!CommonUtils.inMainProcess(context.getApplicationContext())) {
-            return;
-        }
-        LogUtils.setSaveDir(CommonUtils.getPrivatePath(context));
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                SobotMsgManager.getInstance(context).initSobotSDK(context, appkey, partnerid);
+        try {
+            SobotHttpUtils.init(context, SobotBaseUrl.getApi_Host());
+            SobotApp.setApplicationContext(context);
+            SharedPreferencesUtil.saveAppKey(context, appkey);
+            SharedPreferencesUtil.saveStringData(context, Const.SOBOT_APPKEY, appkey);
+            SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_CONFIG_INITSDK, true);
+            SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_CONFIG_APPKEY, appkey);
+            SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_SAVE_HOST_AFTER_INITSDK, SobotBaseUrl.getApi_Host());
+            //清空sdk 语言设置
+            SharedPreferencesUtil.removeKey(context, ZhiChiConstant.SOBOT_LANGUAGE);
+            SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_USER_SETTTINNG_LANGUAGE, "");
+            SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_USE_LANGUAGE, false);
+            SharedPreferencesUtil.saveStringData(context, SOBOT_LANGUAGE_STRING_PATH, "");
+            //清除夜间模式设置
+            SharedPreferencesUtil.removeKey(context, ZCSobotConstant.LOCAL_NIGHT_MODE);
+            SharedPreferencesUtil.removeKey(context, ZCSobotConstant.IS_CHECK_AUTHORITY_SUBTITLE);
+            if (!CommonUtils.inMainProcess(context.getApplicationContext())) {
+                return;
             }
-        }).start();
-
+            LogUtils.setSaveDir(CommonUtils.getPrivatePath(context));
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    SobotMsgManager.getInstance(context).initSobotSDK(context, appkey, partnerid);
+                }
+            }).start();
+        } catch (Exception e) {
+        }
     }
 
 
@@ -618,6 +617,8 @@ public class ZCSobotApi {
         if (context == null) {
             return;
         }
+        //开启离线消息通道前，先清理未读消息数
+        clearUnReadNumber(context, partnerid);
         context = context.getApplicationContext();
         SharedPreferencesUtil.removeKey(context, Const.SOBOT_WAYHTTP);
         SobotMsgManager.getInstance(context).getZhiChiApi().reconnectChannel();
@@ -781,7 +782,14 @@ public class ZCSobotApi {
     public static void setFunctionClickListener(SobotFunctionClickListener functionClickListener) {
         SobotOption.functionClickListener = functionClickListener;
     }
-
+    /**
+     * 帮助中心 在线客服的点击事件, 根据返回结果判断是否拦截 如果返回true,拦截;false 不拦截
+     *
+     * @param openChatListener
+     */
+    public static void setHelpPageOpenChatListener(SobotHelpPageOpenChatListener openChatListener) {
+        SobotOption.openChatListener = openChatListener;
+    }
     /**
      * 设置当前聊天状态的监听
      *
@@ -808,6 +816,28 @@ public class ZCSobotApi {
      */
     public static void setSobotLeaveMsgListener(SobotLeaveMsgListener sobotLeaveMsgListener) {
         SobotOption.sobotLeaveMsgListener = sobotLeaveMsgListener;
+    }
+
+    /**
+     * 3.1.2 新增
+     * 设置点击图片预览的事件监听
+     * 根据返回值客户可动态设置是否拦截，拦截后，客户可自己处理
+     *
+     * @param imagePreviewListener
+     */
+    public static void setImagePreviewListener(SobotImagePreviewListener imagePreviewListener) {
+        SobotOption.imagePreviewListener = imagePreviewListener;
+    }
+
+    /**
+     * 3.1.4 新增
+     * 小程序卡片的点击事件拦截
+     * 拦截后，客户可自己处理跳转到小程序的逻辑
+     *
+     * @param miniProgramClickListener
+     */
+    public static void setMiniProgramClickListener(SobotMiniProgramClickListener miniProgramClickListener) {
+        SobotOption.miniProgramClickListener = miniProgramClickListener;
     }
 
 
@@ -1214,83 +1244,40 @@ public class ZCSobotApi {
      * @param isReDownload 是否重新下载语言包 true 重新下载，false 不重新下载,默认false
      */
     public static void setInternationalLanguage(final Context context, final String language, boolean isUse, boolean isReDownload) {
-        if (context == null || TextUtils.isEmpty(language)) {
+        if (context == null) {
             return;
         }
         //清空sdk 语言设置
-        SharedPreferencesUtil.saveObject(context, "SobotLanguage", null);
+        SharedPreferencesUtil.removeKey(context, ZhiChiConstant.SOBOT_LANGUAGE);
         SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_USER_SETTTINNG_LANGUAGE, "");
-        SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_USE_LANGUAGE, isUse);
-        SharedPreferencesUtil.saveStringData(context, SOBOT_LANGUAGE_STRING_PATH, "");
-
+        SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_USE_LANGUAGE, false);
+        if (TextUtils.isEmpty(language)) {
+            return;
+        }
         if (!isUse) {
             //不使用指定语言,直接返回,使用sdk自带的国际化语言
             return;
         }
-        SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_LANGUAGE_STRING_NAME, "sobot_android_strings_" + language);
-        String languageFileName = "sobot_android_strings_" + language + ".json";
-        //指定语言包保存路径
-        final String languagePath = CommonUtils.getPrivatePath(context) + File.separator + getAppName(context) + File.separator + "sobot_language" + File.separator + ZhiChiUrlApi.LANGUAGE_VERSION + File.separator + languageFileName;
-        File file = new File(languagePath);
-        if (isReDownload && file.exists()) {
-            //如果指定语言包已存在，并且要重新下载使用最新，先删除本地已存在的
-            file.delete();
-            SharedPreferencesUtil.saveStringData(context, SOBOT_LANGUAGE_STRING_PATH, "");
+        if ("he".equals(language)) {
+            //添加sdk语言，设置成希伯来文
+            Locale locale = new Locale("iw");
+            SharedPreferencesUtil.saveObject(context, ZhiChiConstant.SOBOT_LANGUAGE, locale);
+        } else if ("zh-Hans".equals(language)) {
+            //添加sdk语言，设置成中文
+            Locale locale = new Locale("zh");
+            SharedPreferencesUtil.saveObject(context, ZhiChiConstant.SOBOT_LANGUAGE, locale);
+        } else if ("zh-Hant".equals(language)) {
+            //添加sdk语言，设置成中文繁体
+            Locale locale = new Locale("zh", "TW");
+            SharedPreferencesUtil.saveObject(context, ZhiChiConstant.SOBOT_LANGUAGE, locale);
+        } else {
+            //添加sdk语言，设置成指定语言
+            Locale locale = new Locale(language);
+            SharedPreferencesUtil.saveObject(context, ZhiChiConstant.SOBOT_LANGUAGE, locale);
         }
-        if (file.exists()) {
-            //如果该语言包已存在,直接使用
-            SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_LANGUAGE_STRING_PATH, languagePath);
-            if ("ar".equals(language)) {
-                //添加sdk语言，设置成阿拉伯语
-                Locale locale = new Locale("ar");
-                SharedPreferencesUtil.saveObject(context, "SobotLanguage", locale);
-            }
-            if ("he".equals(language)) {
-                //添加sdk语言，设置成希伯来文
-                Locale locale = new Locale("iw");
-                SharedPreferencesUtil.saveObject(context, "SobotLanguage", locale);
-            }
-            //保存客服设置的语言，例如en,zh_rtw等
-            SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_USER_SETTTINNG_LANGUAGE, language);
-            return;
-        }
-//        if (!checkStoragePermission(context)) {
-//            SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_USE_LANGUAGE, false);
-//            LogUtils.i("没有文件存储权限，无法下载语言包");
-//            return;
-//        }
 
-        HttpUtils.getInstance().download("https://img.sobot.com/mobile/multilingual/android/" + ZhiChiUrlApi.LANGUAGE_VERSION + "/" + languageFileName, file, null, new HttpUtils.FileCallBack() {
-
-            @Override
-            public void onResponse(File result) {
-                if ("ar".equals(language)) {
-                    //添加sdk语言，设置成阿拉伯语
-                    Locale locale = new Locale("ar");
-                    SharedPreferencesUtil.saveObject(context, "SobotLanguage", locale);
-                }
-                if ("he".equals(language)) {
-                    //添加sdk语言，设置成希伯来文
-                    Locale locale = new Locale("iw");
-                    SharedPreferencesUtil.saveObject(context, "SobotLanguage", locale);
-                }
-                //保存客服设置的语言，例如en,zh_rtw等
-                SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_USER_SETTTINNG_LANGUAGE, language);
-                SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_LANGUAGE_STRING_PATH, languagePath);
-                SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_USE_LANGUAGE, true);
-                LogUtils.i(" 国际化语言包保存路径:" + result.getPath());
-            }
-
-            @Override
-            public void onError(Exception e, String msg, int responseCode) {
-                LogUtils.i(" 国际化语言包下载失败:", e);
-                SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_USE_LANGUAGE, false);
-            }
-
-            @Override
-            public void inProgress(int progress) {
-            }
-        });
+        SharedPreferencesUtil.saveStringData(context, ZhiChiConstant.SOBOT_USER_SETTTINNG_LANGUAGE, language);
+        SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_USE_LANGUAGE, true);
     }
 
     /**
@@ -1318,4 +1305,45 @@ public class ZCSobotApi {
         return null;
     }
 
+    /**
+     * 设置界面白天、夜间模式或者跟随系统，默认跟随系统
+     * sdk 初始化后设置，因为每次初始化后会还原
+     *
+     * @param context
+     * @param mode    AppCompatDelegate.MODE_NIGHT_NO:白天模式
+     *                AppCompatDelegate.MODE_NIGHT_YES:夜间模式
+     *                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM:跟随系统
+     *                AppCompatDelegate.MODE_NIGHT_AUTO:根据当前时间在day/night主题间切换
+     */
+    public static void setLocalNightMode(Context context, int mode) {
+        if (context != null) {
+            //AppCompatDelegate.MODE_NIGHT_NO:白天模式
+            //AppCompatDelegate.MODE_NIGHT_YES:夜间模式
+            //AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM:跟随系统
+            //AppCompatDelegate.MODE_NIGHT_AUTO:根据当前时间在day/night主题间切换
+            int appCompatDelegate;
+            if (mode == 1) {
+                appCompatDelegate = AppCompatDelegate.MODE_NIGHT_NO;
+            } else if (mode == 2) {
+                appCompatDelegate = AppCompatDelegate.MODE_NIGHT_YES;
+            } else if (mode == 0) {
+                appCompatDelegate = AppCompatDelegate.MODE_NIGHT_AUTO;
+            } else {
+                appCompatDelegate = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+            }
+            SharedPreferencesUtil.saveIntData(context, ZCSobotConstant.LOCAL_NIGHT_MODE, appCompatDelegate);
+        }
+    }
+
+    /**
+     * 权限说明蒙层显示时是否检测有副标题，
+     * 只有检测时同时有副标题，才不显示权限说明蒙层
+     * @param context
+     * @param isCheck true：检测，false:不检测
+     */
+    public static void isCheckAuthoritySubtitle(Context context, boolean isCheck) {
+        if (context != null) {
+            SharedPreferencesUtil.saveBooleanData(context, ZCSobotConstant.IS_CHECK_AUTHORITY_SUBTITLE, isCheck);
+        }
+    }
 }

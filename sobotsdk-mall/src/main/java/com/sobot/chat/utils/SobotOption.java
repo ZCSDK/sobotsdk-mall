@@ -5,15 +5,15 @@ import com.sobot.chat.listener.NewHyperlinkListener;
 import com.sobot.chat.listener.SobotChatStatusListener;
 import com.sobot.chat.listener.SobotConversationListCallback;
 import com.sobot.chat.listener.SobotFunctionClickListener;
+import com.sobot.chat.listener.SobotHelpPageOpenChatListener;
+import com.sobot.chat.listener.SobotImagePreviewListener;
 import com.sobot.chat.listener.SobotLeaveMsgListener;
 import com.sobot.chat.listener.SobotMapCardListener;
+import com.sobot.chat.listener.SobotMiniProgramClickListener;
 import com.sobot.chat.listener.SobotOrderCardListener;
 import com.sobot.chat.listener.SobotTransferOperatorInterceptor;
 import com.sobot.chat.listener.SobotViewListener;
 
-/**
- * Created by jinxl on 2017/3/21.
- */
 public class SobotOption {
     public static HyperlinkListener hyperlinkListener;//超链接的监听
     public static NewHyperlinkListener newHyperlinkListener;//超链接的监听(动态分开拦截（帮助中心、留言、聊天、留言记录、商品卡片，订单卡片）点击事件)
@@ -25,4 +25,7 @@ public class SobotOption {
     public static SobotChatStatusListener sobotChatStatusListener;//聊天状态变化的监听
     public static SobotMapCardListener mapCardListener;//订单卡片的监听
     public static SobotFunctionClickListener functionClickListener;//智齿功能点击的监听，可用于客户埋点
-}
+    public static SobotImagePreviewListener imagePreviewListener;//点击图片预览拦截器，客户可自己处理
+    public static SobotMiniProgramClickListener miniProgramClickListener;//小程序点击的监听，客户可自己处理
+    public static SobotHelpPageOpenChatListener openChatListener;//帮助中心打开在线帮助是否拦截监听
+ }

@@ -66,7 +66,7 @@
             android:layout_height="@dimen/sobot_line_height_0_4_dp"
             android:background="@color/sobot_line_1dp" />
 
-        <android.support.v7.widget.RecyclerView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/sobot_rcy_skill"
             style="@style/sobot_grid_view"
             android:layout_height="wrap_content"

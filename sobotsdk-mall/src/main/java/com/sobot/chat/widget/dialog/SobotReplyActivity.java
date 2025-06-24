@@ -1,17 +1,23 @@
 package com.sobot.chat.widget.dialog;
 
+import static com.sobot.chat.fragment.SobotBaseFragment.REQUEST_CODE_CAMERA;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Rect;
-import android.media.MediaPlayer;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import android.os.Build;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -21,8 +27,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.sobot.chat.MarkConfig;
 import com.sobot.chat.SobotApi;
+import com.sobot.chat.activity.SobotCameraActivity;
 import com.sobot.chat.activity.SobotPhotoActivity;
 import com.sobot.chat.activity.SobotVideoActivity;
 import com.sobot.chat.activity.base.SobotDialogBaseActivity;
@@ -35,12 +45,10 @@ import com.sobot.chat.api.model.ZhiChiUploadAppFileModelResult;
 import com.sobot.chat.application.MyApplication;
 import com.sobot.chat.camera.util.FileUtil;
 import com.sobot.chat.core.HttpUtils;
-import com.sobot.chat.listener.PermissionListener;
 import com.sobot.chat.listener.PermissionListenerImpl;
 import com.sobot.chat.notchlib.INotchScreen;
 import com.sobot.chat.notchlib.NotchScreenManager;
 import com.sobot.chat.utils.ChatUtils;
-import com.sobot.chat.utils.CommonUtils;
 import com.sobot.chat.utils.CustomToast;
 import com.sobot.chat.utils.FastClickUtils;
 import com.sobot.chat.utils.ImageUtils;
@@ -49,6 +57,7 @@ import com.sobot.chat.utils.MD5Util;
 import com.sobot.chat.utils.MediaFileUtils;
 import com.sobot.chat.utils.ResourceUtils;
 import com.sobot.chat.utils.ScreenUtils;
+import com.sobot.chat.utils.SobotOption;
 import com.sobot.chat.utils.StringUtils;
 import com.sobot.chat.utils.ToastUtil;
 import com.sobot.chat.utils.ZhiChiConstant;
@@ -57,7 +66,6 @@ import com.sobot.chat.widget.kpswitch.util.KeyboardUtil;
 import com.sobot.network.http.callback.StringResultCallBack;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,13 +88,31 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
      */
     protected SobotDeleteWorkOrderDialog seleteMenuWindow;
 
-    //权限回调
-    public PermissionListener permissionListener;
     protected File cameraFile;
     private String mUid = "";
     private String mCompanyId = "";
     private SobotUserTicketInfo mTicketInfo;
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+            if (!SobotApi.getSwitchMarkStatus(MarkConfig.LANDSCAPE_SCREEN)) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);//竖屏
+            } else {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);//横屏
 
+            }
+        }
+        //去掉dialog 的标题栏（不然弹窗会显示app名字）
+        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
+        super.onCreate(savedInstanceState);
+        //窗口对齐屏幕宽度
+        Window win = this.getWindow();
+        WindowManager.LayoutParams lp = win.getAttributes();
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        lp.height = WindowManager.LayoutParams.MATCH_PARENT;
+        lp.gravity = Gravity.BOTTOM;
+        win.setAttributes(lp);
+    }
 
     @Override
     protected int getContentViewResId() {
@@ -131,7 +157,7 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                     if (notchScreenInfo.hasNotch) {
                         for (Rect rect : notchScreenInfo.notchRects) {
                             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ScreenUtils.dip2px(SobotReplyActivity.this, 104));
-                            lp.setMargins((rect.right > 110 ? 110 : rect.right) + ScreenUtils.dip2px(SobotReplyActivity.this, 20), (rect.right > 110 ? 110 : rect.right)+ScreenUtils.dip2px(SobotReplyActivity.this, 20), ScreenUtils.dip2px(SobotReplyActivity.this, 20), ScreenUtils.dip2px(SobotReplyActivity.this, 20));
+                            lp.setMargins((rect.right > 110 ? 110 : rect.right) + ScreenUtils.dip2px(SobotReplyActivity.this, 20), (rect.right > 110 ? 110 : rect.right) + ScreenUtils.dip2px(SobotReplyActivity.this, 20), ScreenUtils.dip2px(SobotReplyActivity.this, 20), ScreenUtils.dip2px(SobotReplyActivity.this, 20));
                             sobotReplyEdit.setLayoutParams(lp);
                         }
                     }
@@ -223,7 +249,7 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
         if (v == sobotBtnSubmit) {//提交
             KeyboardUtil.hideKeyboard(sobotBtnSubmit);
             if (StringUtils.isEmpty(sobotReplyEdit.getText().toString().trim())) {
-                Toast.makeText(getContext(), ResourceUtils.getResString(getContext(), "sobot_please_input_reply_no_empty"), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), ResourceUtils.getResString(getContext(), "sobot_please_input_reply_no_empty"), Toast.LENGTH_SHORT).show();
                 return;
             }
             if (FastClickUtils.isCanClick()) {
@@ -232,7 +258,7 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                     @Override
                     public void onSuccess(String s) {
                         LogUtils.e(s);
-                        CustomToast.makeText(SobotReplyActivity.this, ResourceUtils.getResString(SobotReplyActivity.this, "sobot_leavemsg_success_tip"), 1000, ResourceUtils.getDrawableId(SobotReplyActivity.this, "sobot_iv_login_right")).show();
+                        CustomToast.makeText(getApplicationContext(), ResourceUtils.getResString(SobotReplyActivity.this, "sobot_leavemsg_success_tip"), 1000, ResourceUtils.getDrawableId(SobotReplyActivity.this, "sobot_iv_login_right")).show();
                         try {
                             Thread.sleep(500);//睡眠一秒  延迟拉取数据
                         } catch (InterruptedException e) {
@@ -250,7 +276,7 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
 
                     @Override
                     public void onFailure(Exception e, String des) {
-                        ToastUtil.showCustomToast(SobotReplyActivity.this,ResourceUtils.getResString(SobotReplyActivity.this, "sobot_leavemsg_error_tip"));
+                        ToastUtil.showCustomToast(getApplicationContext(), ResourceUtils.getResString(SobotReplyActivity.this, "sobot_leavemsg_error_tip"));
                         e.printStackTrace();
                         SobotDialogUtils.stopProgressDialog(SobotReplyActivity.this);
                     }
@@ -285,11 +311,18 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                                 cacheFile.setFileName(file.getName());
                                 cacheFile.setUrl(result.getFileUrl());
                                 cacheFile.setFilePath(result.getFileLocalPath());
-                                cacheFile.setFileType(FileTypeConfig.getFileType(FileUtil.getFileEndWith(result.getFileLocalPath())));
+                                cacheFile.setFileType(FileTypeConfig.getFileType(FileUtil.checkFileEndWith(result.getFileLocalPath())));
                                 cacheFile.setMsgId("" + System.currentTimeMillis());
                                 Intent intent = SobotVideoActivity.newIntent(SobotReplyActivity.this, cacheFile);
                                 SobotReplyActivity.this.startActivity(intent);
                                 return;
+                            }
+                            if (SobotOption.imagePreviewListener != null) {
+                                //如果返回true,拦截;false 不拦截
+                                boolean isIntercept = SobotOption.imagePreviewListener.onPreviewImage(getSobotBaseContext(), TextUtils.isEmpty(result.getFileLocalPath()) ? result.getFileUrl() : result.getFileLocalPath());
+                                if (isIntercept) {
+                                    return;
+                                }
                             }
                             Intent intent = new Intent(SobotReplyActivity.this, SobotPhotoActivity.class);
                             intent.putExtra("imageUrL", TextUtils.isEmpty(result.getFileLocalPath()) ? result.getFileUrl() : result.getFileLocalPath());
@@ -339,23 +372,8 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
             menuWindow.dismiss();
             if (v.getId() == getResId("btn_take_photo")) {
                 LogUtils.i("拍照");
-                if (!CommonUtils.isExitsSdcard()) {
-                    ToastUtil.showCustomToast(SobotReplyActivity.this, getResString("sobot_sdcard_does_not_exist"),
-                            Toast.LENGTH_SHORT);
-                    return;
-                }
-                permissionListener = new PermissionListenerImpl() {
-                    @Override
-                    public void onPermissionSuccessListener() {
-                        if (isCameraCanUse()) {
-                            cameraFile = ChatUtils.openCamera(SobotReplyActivity.this);
-                        }
-                    }
-                };
-                if (!checkCameraPermission()) {
-                    return;
-                }
-                cameraFile = ChatUtils.openCamera(SobotReplyActivity.this);
+                selectPicFromCamera();
+
             }
             if (v.getId() == getResId("btn_pick_photo")) {
                 LogUtils.i("选择照片");
@@ -365,7 +383,7 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                         ChatUtils.openSelectPic(SobotReplyActivity.this);
                     }
                 };
-                if (!checkStoragePermission()) {
+                if (!isHasPermission(1, 0)) {
                     return;
                 }
                 ChatUtils.openSelectPic(SobotReplyActivity.this);
@@ -378,7 +396,7 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                         ChatUtils.openSelectVedio(SobotReplyActivity.this, null);
                     }
                 };
-                if (!checkStoragePermission()) {
+                if (!isHasPermission(1, 1)) {
                     return;
                 }
                 ChatUtils.openSelectVedio(SobotReplyActivity.this, null);
@@ -428,14 +446,13 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                     }
                     String path = ImageUtils.getPath(this, selectedImage);
                     if (MediaFileUtils.isVideoFileType(path)) {
-                        MediaPlayer mp = new MediaPlayer();
                         try {
-                            mp.setDataSource(this, selectedImage);
-                            mp.prepare();
-                            int videoTime = mp.getDuration();
-                            if (videoTime / 1000 > 15) {
-                                ToastUtil.showToast(this, getResString("sobot_upload_vodie_length"));
-                                return;
+                            File selectedFile = new File(path);
+                            if (selectedFile.exists()) {
+                                if (selectedFile.length() > 50 * 1024 * 1024) {
+                                    ToastUtil.showToast(getApplicationContext(), getResString("sobot_file_upload_failed"));
+                                    return;
+                                }
                             }
                             SobotDialogUtils.startProgressDialog(this);
 //                            ChatUtils.sendPicByFilePath(this,path,sendFileListener,false);
@@ -445,11 +462,11 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                                 filePath = FileUtil.saveImageFile(this, selectedImage, fName + FileUtil.getFileEndWith(path), path);
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                ToastUtil.showToast(this, ResourceUtils.getResString(this, "sobot_pic_type_error"));
+                                ToastUtil.showToast(getApplicationContext(), ResourceUtils.getResString(this, "sobot_pic_type_error"));
                                 return;
                             }
                             sendFileListener.onSuccess(filePath);
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
 
@@ -468,18 +485,41 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                     showHint(getResString("sobot_pic_select_again"));
                 }
             }
+        } else if (resultCode == SobotCameraActivity.RESULT_CODE) {
+            if (requestCode == REQUEST_CODE_CAMERA) {
+                int actionType = SobotCameraActivity.getActionType(data);
+                if (actionType == SobotCameraActivity.ACTION_TYPE_VIDEO) {
+                    File videoFile = new File(SobotCameraActivity.getSelectedVideo(data));
+                    if (videoFile.exists()) {
+                        cameraFile = videoFile;
+                        SobotDialogUtils.startProgressDialog(SobotReplyActivity.this);
+                        sendFileListener.onSuccess(videoFile.getAbsolutePath());
+                    } else {
+                        showHint(getResString("sobot_pic_select_again"));
+                    }
+                } else {
+                    File tmpPic = new File(SobotCameraActivity.getSelectedImage(data));
+                    if (tmpPic.exists()) {
+                        cameraFile = tmpPic;
+                        SobotDialogUtils.startProgressDialog(SobotReplyActivity.this);
+                        ChatUtils.sendPicByFilePath(SobotReplyActivity.this, tmpPic.getAbsolutePath(), sendFileListener, true);
+                    } else {
+                        showHint(getResString("sobot_pic_select_again"));
+                    }
+                }
+            }
         }
 
     }
 
     public void showHint(String content) {
-        CustomToast.makeText(this, content, 1000).show();
+        CustomToast.makeText(getApplicationContext(), content, 1000).show();
     }
 
     private ChatUtils.SobotSendFileListener sendFileListener = new ChatUtils.SobotSendFileListener() {
         @Override
         public void onSuccess(final String filePath) {
-            zhiChiApi.fileUploadForPostMsg(SobotReplyActivity.this, mCompanyId, mUid,filePath, new ResultCallBack<ZhiChiMessage>() {
+            zhiChiApi.fileUploadForPostMsg(SobotReplyActivity.this, mCompanyId, mUid, filePath, new ResultCallBack<ZhiChiMessage>() {
                 @Override
                 public void onSuccess(ZhiChiMessage zhiChiMessage) {
 
@@ -496,7 +536,8 @@ public class SobotReplyActivity extends SobotDialogBaseActivity implements Adapt
                 @Override
                 public void onFailure(Exception e, String des) {
                     SobotDialogUtils.stopProgressDialog(SobotReplyActivity.this);
-                    showHint(ResourceUtils.getResString(SobotReplyActivity.this, "sobot_net_work_err"));
+                    showHint(TextUtils.isEmpty(des) ? ResourceUtils.getResString(getSobotBaseActivity(), "sobot_net_work_err") : des);
+
                 }
 
                 @Override

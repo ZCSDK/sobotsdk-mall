@@ -8,6 +8,7 @@ import android.text.TextUtils;
 
 import com.sobot.chat.MarkConfig;
 import com.sobot.chat.SobotApi;
+import com.sobot.chat.activity.SobotMuItiPostMsgActivty;
 import com.sobot.chat.activity.SobotPostMsgActivity;
 import com.sobot.chat.api.ZhiChiApi;
 import com.sobot.chat.api.model.SobotLeaveMsgConfig;
@@ -33,7 +34,6 @@ public class StPostMsgPresenter {
     public static final String INTENT_KEY_CUSTOMERID = "intent_key_customerid";
     public static final String INTENT_KEY_COMPANYID = "intent_key_companyid";
     public static final String INTENT_KEY_IS_SHOW_TICKET = "intent_key_is_show_ticket";
-    public static final String INTENT_KEY_CUS_FIELDS = "intent_key_cus_fields";
 
     private StPostMsgPresenter() {
     }
@@ -172,6 +172,31 @@ public class StPostMsgPresenter {
                     }
                 }
                 mIsRunning = false;
+            }
+
+            @Override
+            public void onFailure(Exception e, String des) {
+                processReqFailure(e, des);
+            }
+        });
+    }
+
+    /**
+     * 获取留言模板的配置,然后启动多轮工单节点留言弹窗
+     *
+     * @param uid
+     * @param templateId
+     */
+    public void obtainTmpConfigToMuItiPostMsg(final String uid, final String templateId,final String tipMsgId) {
+        mApi.getMsgTemplateConfig(mCancelTag, uid, templateId, new StringResultCallBack<SobotLeaveMsgConfig>() {
+            @Override
+            public void onSuccess(SobotLeaveMsgConfig data) {
+                Intent intent = new Intent(mContext, SobotMuItiPostMsgActivty.class);
+                intent.putExtra(INTENT_KEY_UID, uid);
+                intent.putExtra("templateId", templateId);
+                intent.putExtra("tipMsgId", tipMsgId);
+                intent.putExtra(INTENT_KEY_CONFIG, data);
+                mContext.startActivity(intent);
             }
 
             @Override

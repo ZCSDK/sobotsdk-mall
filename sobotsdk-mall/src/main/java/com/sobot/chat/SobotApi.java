@@ -1,10 +1,13 @@
 package com.sobot.chat;
 
+import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_CONFIG;
+import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_UID;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -13,6 +16,7 @@ import com.sobot.chat.activity.SobotHelpCenterActivity;
 import com.sobot.chat.activity.SobotPostMsgActivity;
 import com.sobot.chat.api.ZhiChiApi;
 import com.sobot.chat.api.apiUtils.SobotApp;
+import com.sobot.chat.api.apiUtils.SobotBaseUrl;
 import com.sobot.chat.api.enumtype.SobotChatAvatarDisplayMode;
 import com.sobot.chat.api.enumtype.SobotChatStatusMode;
 import com.sobot.chat.api.enumtype.SobotChatTitleDisplayMode;
@@ -20,8 +24,6 @@ import com.sobot.chat.api.model.CommonModel;
 import com.sobot.chat.api.model.ConsultingContent;
 import com.sobot.chat.api.model.Information;
 import com.sobot.chat.api.model.OrderCardContentModel;
-import com.sobot.chat.api.model.SobotCusFieldConfig;
-import com.sobot.chat.api.model.SobotFieldModel;
 import com.sobot.chat.api.model.SobotLeaveMsgConfig;
 import com.sobot.chat.api.model.SobotLocationModel;
 import com.sobot.chat.api.model.SobotMsgCenterModel;
@@ -49,13 +51,9 @@ import com.sobot.chat.utils.ZhiChiConstant;
 import com.sobot.network.apiUtils.SobotHttpUtils;
 import com.sobot.network.http.callback.StringResultCallBack;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_CONFIG;
-import static com.sobot.chat.presenter.StPostMsgPresenter.INTENT_KEY_UID;
 
 /**
  * SobotChatApi接口输出类
@@ -76,7 +74,7 @@ public class SobotApi {
             Log.e(Tag, "initSobotSDK  参数为空 context:" + context + "  appkey:" + appkey);
             return;
         }
-        SobotHttpUtils.init(context);
+        SobotHttpUtils.init(context, SobotBaseUrl.getApi_Host());
         SobotApp.setApplicationContext(context);
         SharedPreferencesUtil.saveAppKey(context, appkey);
 
@@ -183,6 +181,8 @@ public class SobotApi {
         if (context == null) {
             return;
         }
+        //开启离线消息通道前，先清理未读消息数
+        clearAllUnreadCount(context, uid);
         context = context.getApplicationContext();
         SharedPreferencesUtil.removeKey(context, Const.SOBOT_WAYHTTP);
         SobotMsgManager.getInstance(context).getZhiChiApi().reconnectChannel();
@@ -234,8 +234,9 @@ public class SobotApi {
      * 退出客服，用于用户退出登录时调用
      *
      * @param context 上下文对象
+     * @param reason  手动结束会话的原因，非必填
      */
-    public static void exitSobotChat(final Context context) {
+    public static void exitSobotChat(final Context context,String reason) {
         SharedPreferencesUtil.saveBooleanData(context, ZhiChiConstant.SOBOT_IS_EXIT, true);
         if (context == null) {
             return;
@@ -255,7 +256,10 @@ public class SobotApi {
 
             if (!TextUtils.isEmpty(cid) && !TextUtils.isEmpty(uid)) {
                 ZhiChiApi zhiChiApi = SobotMsgManager.getInstance(context).getZhiChiApi();
-                zhiChiApi.out(cid, uid, new StringResultCallBack<CommonModel>() {
+                if (TextUtils.isEmpty(reason)) {
+                    reason = "客户手动调用结束会话";
+                }
+                zhiChiApi.out(cid, uid, reason,new StringResultCallBack<CommonModel>() {
                     @Override
                     public void onSuccess(CommonModel result) {
                         LogUtils.i("下线成功");
@@ -840,18 +844,6 @@ public class SobotApi {
                     public void onSuccess(ZhiChiInitModeBase initModel) {
                         SharedPreferencesUtil.saveObject(context,
                                 ZhiChiConstant.sobot_last_current_info, info);
-                        List<SobotFieldModel> sobotFieldModels = new ArrayList<>();
-                        if (info.getLeaveCusFieldMap() != null && info.getLeaveCusFieldMap().size() > 0) {
-                            for (String key :
-                                    info.getLeaveCusFieldMap().keySet()) {
-                                SobotFieldModel sobotFieldModel = new SobotFieldModel();
-                                SobotCusFieldConfig sobotCusFieldConfig = new SobotCusFieldConfig();
-                                sobotCusFieldConfig.setFieldId(key);
-                                sobotCusFieldConfig.setValue(info.getLeaveCusFieldMap().get(key));
-                                sobotFieldModel.setCusFieldConfig(sobotCusFieldConfig);
-                                sobotFieldModels.add(sobotFieldModel);
-                            }
-                        }
                         SobotLeaveMsgConfig config = new SobotLeaveMsgConfig();
                         config.setEmailFlag(initModel.isEmailFlag());
                         config.setEmailShowFlag(initModel.isEmailShowFlag());
@@ -879,7 +871,6 @@ public class SobotApi {
                         intent.putExtra(StPostMsgPresenter.INTENT_KEY_CUSTOMERID, initModel.getCustomerId());
                         intent.putExtra(ZhiChiConstant.FLAG_EXIT_SDK, false);
                         intent.putExtra(StPostMsgPresenter.INTENT_KEY_GROUPID, info.getLeaveMsgGroupId());
-                        intent.putExtra(StPostMsgPresenter.INTENT_KEY_CUS_FIELDS, (Serializable) sobotFieldModels);
                         intent.putExtra(StPostMsgPresenter.INTENT_KEY_IS_SHOW_TICKET, isOnlyShowTicket);
                         context.startActivity(intent);
                     }

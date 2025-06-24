@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -67,6 +67,7 @@ public class SobotTicketDetailActivity extends SobotBaseActivity implements View
      */
     public static Intent newIntent(Context context, String companyId, String uid, SobotUserTicketInfo ticketInfo) {
         Intent intent = new Intent(context, SobotTicketDetailActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(INTENT_KEY_UID, uid);
         intent.putExtra(INTENT_KEY_COMPANYID, companyId);
         intent.putExtra(INTENT_KEY_TICKET_INFO, ticketInfo);
@@ -175,9 +176,9 @@ public class SobotTicketDetailActivity extends SobotBaseActivity implements View
                         if (mTicketInfo.getFlag() != 3 && mTicketInfo.getFlag() < dealTicketInfo.getFlag()) {//不是结束
                             mTicketInfo.setFlag(dealTicketInfo.getFlag());
                         }
-                        if (dealTicketInfo.getFlag() == 3 && dealTicketInfo.getEvaluate() != null) {
-                            mList.add(dealTicketInfo.getEvaluate());
-                            mEvaluate = dealTicketInfo.getEvaluate();
+                        if (dealTicketInfo.getFlag() == 3 && dealTicketInfo.getCusNewSatisfactionVO()!= null) {
+                            mList.add(dealTicketInfo.getCusNewSatisfactionVO());
+                            mEvaluate = dealTicketInfo.getCusNewSatisfactionVO();
                             if (mEvaluate.isOpen()) {
                                 if (mEvaluate.isEvalution()) {
                                     //已评价
@@ -215,8 +216,8 @@ public class SobotTicketDetailActivity extends SobotBaseActivity implements View
         });
     }
 
-    public void submitEvaluate(final int score, final String remark) {
-        zhiChiApi.addTicketSatisfactionScoreInfo(SobotTicketDetailActivity.this, mUid, mCompanyId, mTicketInfo.getTicketId(), score, remark, new StringResultCallBack<String>() {
+    public void submitEvaluate(final int score, final String remark, final String labelTag, final int defaultQuestionFlag) {
+        zhiChiApi.addTicketSatisfactionScoreInfo(SobotTicketDetailActivity.this, mUid, mCompanyId, mTicketInfo.getTicketId(), score, remark,labelTag,defaultQuestionFlag, new StringResultCallBack<String>() {
             @Override
             public void onSuccess(String result) {
                 CustomToast.makeText(SobotTicketDetailActivity.this, ResourceUtils.getResString(SobotTicketDetailActivity.this, "sobot_leavemsg_success_tip"), 1000, ResourceUtils.getDrawableId(SobotTicketDetailActivity.this, "sobot_iv_login_right")).show();
@@ -225,11 +226,23 @@ public class SobotTicketDetailActivity extends SobotBaseActivity implements View
                     Object obj = mList.get(i);
                     if (obj instanceof StUserDealTicketInfo) {
                         StUserDealTicketInfo data = (StUserDealTicketInfo) mList.get(i);
-                        if (data.getFlag() == 3 && data.getEvaluate() != null) {
-                            SobotUserTicketEvaluate evaluate = data.getEvaluate();
+                        if (data.getFlag() == 3 && data.getCusNewSatisfactionVO() != null) {
+                            SobotUserTicketEvaluate evaluate = data.getCusNewSatisfactionVO();
                             evaluate.setScore(score);
                             evaluate.setRemark(remark);
+                            evaluate.setTag(labelTag);
+                            evaluate.setDefaultQuestionFlagValue(defaultQuestionFlag);
                             evaluate.setEvalution(true);
+                            evaluate.setIsQuestionFlag(mEvaluate.getIsQuestionFlag());
+                            evaluate.setTxtFlag(mEvaluate.getTxtFlag());
+                            if(mEvaluate.getScoreInfo()!=null&& mEvaluate.getScoreInfo().size()>0) {
+                                for (int j = 0; j < mEvaluate.getScoreInfo().size(); j++) {
+                                    if(mEvaluate.getScoreInfo().get(j).getTags()!=null && mEvaluate.getScoreInfo().get(j).getTags().size()>0){
+                                        evaluate.setIsTagFlag(1);
+                                        return;
+                                    }
+                                }
+                            }
                             mAdapter.notifyDataSetChanged();
                             break;
                         }
@@ -302,13 +315,15 @@ public class SobotTicketDetailActivity extends SobotBaseActivity implements View
                 }
             }
             if (requestCode == ZCSobotConstant.EXTRA_TICKET_EVALUATE_REQUEST_CODE) {
-                submitEvaluate(data.getIntExtra("score", 0), data.getStringExtra("content"));
+                submitEvaluate(data.getIntExtra("score", 0), data.getStringExtra("content"),data.getStringExtra("labelTag"),data.getIntExtra("defaultQuestionFlag",-1));
             }
 
             if (requestCode == ZCSobotConstant.EXTRA_TICKET_EVALUATE_REQUEST_FINISH_CODE) {
                 final int score = data.getIntExtra("score", 0);
                 final String remark = data.getStringExtra("content");
-                zhiChiApi.addTicketSatisfactionScoreInfo(SobotTicketDetailActivity.this, mUid, mCompanyId, mTicketInfo.getTicketId(), score, remark, new StringResultCallBack<String>() {
+                final String labelTag = data.getStringExtra("labelTag");
+                final int defaultQuestionFlag = data.getIntExtra("defaultQuestionFlag",-1);
+                zhiChiApi.addTicketSatisfactionScoreInfo(SobotTicketDetailActivity.this, mUid, mCompanyId, mTicketInfo.getTicketId(), score, remark,labelTag,defaultQuestionFlag, new StringResultCallBack<String>() {
                     @Override
                     public void onSuccess(String result) {
                         sobot_evaluate_ll.setVisibility(View.GONE);
@@ -316,11 +331,23 @@ public class SobotTicketDetailActivity extends SobotBaseActivity implements View
                             Object obj = mList.get(i);
                             if (obj instanceof StUserDealTicketInfo) {
                                 StUserDealTicketInfo data = (StUserDealTicketInfo) mList.get(i);
-                                if (data.getFlag() == 3 && data.getEvaluate() != null) {
-                                    SobotUserTicketEvaluate evaluate = data.getEvaluate();
+                                if (data.getFlag() == 3 && data.getCusNewSatisfactionVO() != null) {
+                                    SobotUserTicketEvaluate evaluate = data.getCusNewSatisfactionVO();
                                     evaluate.setScore(score);
                                     evaluate.setRemark(remark);
+                                    evaluate.setDefaultQuestionFlagValue(defaultQuestionFlag);
+                                    evaluate.setTag(labelTag);
                                     evaluate.setEvalution(true);
+                                    evaluate.setIsQuestionFlag(mEvaluate.getIsQuestionFlag());
+                                    evaluate.setTxtFlag(mEvaluate.getTxtFlag());
+                                    if(mEvaluate.getScoreInfo()!=null&& mEvaluate.getScoreInfo().size()>0) {
+                                        for (int j = 0; j < mEvaluate.getScoreInfo().size(); j++) {
+                                            if(mEvaluate.getScoreInfo().get(j).getTags()!=null && mEvaluate.getScoreInfo().get(j).getTags().size()>0){
+                                                evaluate.setIsTagFlag(1);
+                                                return;
+                                            }
+                                        }
+                                    }
                                     mAdapter.notifyDataSetChanged();
                                     break;
                                 }

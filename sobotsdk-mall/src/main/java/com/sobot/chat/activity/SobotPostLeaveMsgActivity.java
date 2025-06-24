@@ -3,6 +3,7 @@ package com.sobot.chat.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -101,7 +102,7 @@ public class SobotPostLeaveMsgActivity extends SobotBaseActivity implements View
             @Override
             public void onSuccess(SobotOfflineLeaveMsgModel offlineLeaveMsgModel) {
                 if (offlineLeaveMsgModel != null) {
-                    sobot_tv_post_msg.setText(TextUtils.isEmpty(offlineLeaveMsgModel.getMsgLeaveTxt()) ? "" : offlineLeaveMsgModel.getMsgLeaveTxt());
+                    sobot_tv_post_msg.setText(TextUtils.isEmpty(offlineLeaveMsgModel.getMsgLeaveTxt()) ? "" : Html.fromHtml(offlineLeaveMsgModel.getMsgLeaveTxt()));
                     sobot_post_et_content.setHint(TextUtils.isEmpty(offlineLeaveMsgModel.getMsgLeaveContentTxt()) ? "" : offlineLeaveMsgModel.getMsgLeaveContentTxt());
                     if (!TextUtils.isEmpty(offlineLeaveMsgModel.getLeaveExplain())){
                         sobot_tv_leaveExplain.setVisibility(View.VISIBLE);
@@ -122,7 +123,7 @@ public class SobotPostLeaveMsgActivity extends SobotBaseActivity implements View
     @Override
     public void onClick(View v) {
         if (v == sobot_btn_submit) {
-            final String content = sobot_post_et_content.getText().toString();
+            final String content = sobot_post_et_content.getText().toString().trim();
             if (TextUtils.isEmpty(content) || TextUtils.isEmpty(mUid)) {
                 CustomToast.makeText(SobotPostLeaveMsgActivity.this, ResourceUtils.getResString(SobotPostLeaveMsgActivity.this, "sobot_problem_description") + ResourceUtils.getResString(SobotPostLeaveMsgActivity.this, "sobot__is_null"), 1000).show();
                 return;

@@ -19,7 +19,6 @@ import com.sobot.chat.camera.util.FileUtil;
 import com.sobot.chat.listener.PermissionListenerImpl;
 import com.sobot.chat.utils.ResourceUtils;
 import com.sobot.chat.utils.SobotPathManager;
-import com.sobot.chat.widget.statusbar.StatusBarCompat;
 
 /**
  * @author Created by jinxl on 2018/12/3.
@@ -28,7 +27,7 @@ public class SobotCameraActivity extends SobotBaseActivity {
     private static final String EXTRA_ACTION_TYPE = "EXTRA_ACTION_TYPE";
     private static final String EXTRA_IMAGE_FILE_PATH = "EXTRA_IMAGE_FILE_PATH";
     private static final String EXTRA_VIDEO_FILE_PATH = "EXTRA_VIDEO_FILE_PATH";
-    private static final int RESULT_CODE = 103;
+    public static final int RESULT_CODE = 103;
 
     public static final int ACTION_TYPE_PHOTO = 0;
     public static final int ACTION_TYPE_VIDEO = 1;
@@ -117,6 +116,9 @@ public class SobotCameraActivity extends SobotBaseActivity {
 
     @Override
     protected void onDestroy() {
+        if (null != jCameraView) {
+            jCameraView.setErrorLisenter(null);
+        }
         MyApplication.getInstance().deleteActivity(this);
         super.onDestroy();
     }
@@ -145,11 +147,19 @@ public class SobotCameraActivity extends SobotBaseActivity {
             public void AudioPermissionError() {
                 permissionListener = new PermissionListenerImpl() {
                 };
-                if (checkIsShowPermissionPop(getResString("sobot_microphone"), getResString("sobot_microphone_yongtu"), 2)) {
-                } else {
-                    if (!checkAudioPermission()) {
-                    }
+                if (!isHasPermission(2, 3)) {
                 }
+            }
+
+
+            @Override
+            public boolean checkAutoPremission() {
+                return isHasPermission(2,2);
+            }
+
+            @Override
+            public boolean checkCameraPremission() {
+                return isHasPermission(3, 3);
             }
         });
         //JCameraView监听
@@ -188,8 +198,6 @@ public class SobotCameraActivity extends SobotBaseActivity {
                 SobotCameraActivity.this.finish();
             }
         });
-
-        StatusBarCompat.setNavigationBarColor(this, 0x33000000);
     }
 
     @Override

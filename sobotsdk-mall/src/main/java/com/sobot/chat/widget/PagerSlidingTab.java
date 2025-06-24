@@ -12,8 +12,9 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
+import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 
 import com.sobot.chat.R;
 import com.sobot.chat.utils.ResourceUtils;
+import com.sobot.chat.utils.ScreenUtils;
 
 import java.util.Locale;
 
@@ -73,7 +75,7 @@ public class PagerSlidingTab extends HorizontalScrollView {
     private int indicatorHeight = 3;//指示线的高度
     private int underlineHeight = 2;
     private int dividerPadding = 12;
-    private int tabPadding = 14;
+    private int tabPadding = 10;
     private int dividerWidth = 1;
     private int paddingBottom=4;//距离底部
 
@@ -222,12 +224,18 @@ public class PagerSlidingTab extends HorizontalScrollView {
     }
 
     private void addTextTab(final int position, String title) {
-
         TextView tab = new TextView(getContext());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            tab.setAutoSizeTextTypeWithDefaults(TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM);
+            tab.setAutoSizeTextTypeUniformWithConfiguration(12,16,2,TypedValue.COMPLEX_UNIT_SP);
+        }
+        tab.setWidth(120);
+        tab.setEllipsize(TextUtils.TruncateAt.END);
+        tab.setLines(1);
         tab.setText(title);
         tab.setFocusable(true);
         tab.setGravity(Gravity.CENTER);
-        tab.setSingleLine();
+        tab.setMinHeight(ScreenUtils.dip2px(getContext(),44));
         tab.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));//加粗
         tab.setOnClickListener(new OnClickListener() {
             @Override
