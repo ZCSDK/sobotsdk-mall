@@ -12,9 +12,9 @@ tasks.register('androidSourcesJar', Jar) {
 
 ext {
     PUBLISH_GROUP_ID = "com.sobot.chat"        //项目包名
-//    PUBLISH_ARTIFACT_ID = 'sdk_demo'            //测试项目名
-    PUBLISH_ARTIFACT_ID = 'sobotsdk-mall'            //项目名
-    PUBLISH_VERSION = '3.3.5'                    //版本号
+    PUBLISH_ARTIFACT_ID = 'sdk_mall_demo'            //测试项目名
+//    PUBLISH_ARTIFACT_ID = 'sobotsdk-mall-x'            //项目名
+    PUBLISH_VERSION = '3.3.6'                    //版本号
 }
 
 publishing {
@@ -56,6 +56,23 @@ publishing {
                     //分支地址：
                     url = 'https://github.com/ZCSDK/sobotsdk/master'
                 }
+                withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+                    //跳过“unspecified”的依赖项
+                    //避免出现问题:
+                    //Execution failed for task ':sample:checkDebugAarMetadata'.
+                    //> Could not resolve all files for configuration ':sample:debugRuntimeClasspath'.
+                    //   > Could not find :unspecified:.
+                    //     Required by:
+                    project.configurations.implementation.allDependencies.each {
+                        if (it.name != 'unspecified') {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                }
             }
         }
     }
@@ -68,9 +85,9 @@ mavenCentral {
     authToken = rootProject.ext.has("authTokenValue") ? rootProject.ext.authTokenValue : ""
     // 上传是否应该自动发布。如果您希望手动执行此操作，请使用 'USER_MANAGED'。
     // 该属性是可选的，默认为 'AUTOMATIC'。
-    publishingType = "USER_MANAGED"
+    publishingType = "AUTOMATIC"
     // 当发布类型为 'AUTOMATIC' 时，状态API获取 'PUBLISHING' 或 'PUBLISHED' 状态的最大等待时间
     // 或者当发布类型为 'USER_MANAGED' 时，获取 'VALIDATED' 状态。
     // 该属性是可选的，默认为60秒。
-    maxWait = 60
+    maxWait = 160
 }
